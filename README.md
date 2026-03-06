@@ -7,7 +7,7 @@
 
 ---
 
-## technologies used
+## Technologies used
 * **Backend**: ASP.NET Core MVC (C#)
 * **Database & ORM**: SQL Server via Entity Framework Core (Code First)
 * **Security & Auth**: ASP.NET Identity (Role-Based Access Control: Visitor, User, Admin)
@@ -36,8 +36,6 @@
 ### 4. Administrative Dashboard
 * **Full CRUD Control**: Specialized middleware allowing Admins to moderate or delete any platform content (comments, groups, users) to maintain community standards.
 * **Database Seeding**: Automated seeding for realistic initial data (Users, Roles, Groups, and Posts).
-
----
 
 ## Architecture Details
 * **MVC Pattern**: Strict separation of concerns between Models (data structures), Views (Tailwind-styled UI), and Controllers (business logic).
