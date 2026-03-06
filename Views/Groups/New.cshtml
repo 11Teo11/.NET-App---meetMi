@@ -1,0 +1,124 @@
+﻿@* views/groups/new.cshtml *@
+@model ProiectDotNet.Models.Group
+@{
+    ViewData["Title"] = "Create Group";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<div class="w-full max-w-5xl mx-auto py-8 px-4">
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 border-b border-[#2d3640] pb-8 relative z-50">
+        <div class="flex flex-col gap-2">
+            <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-white leading-none uppercase">
+                Create a New <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2dd4bf] to-[#facc15]">Squad.</span>
+            </h1>
+            <p class="text-[#94a3b8] text-lg font-medium tracking-wide flex items-center gap-2">
+                <span class="material-symbols-outlined text-[#2dd4bf]">add_circle</span>
+                Start a community and find your people.
+            </p>
+        </div>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-12 relative z-0">
+        <div class="flex-1">
+            @* definim explicit controlerul de grupuri *@
+            <form asp-controller="Groups" asp-action="New" method="post" enctype="multipart/form-data" class="flex flex-col gap-8">
+
+                <div asp-validation-summary="ModelOnly" class="text-[#facc15] text-sm font-bold bg-[#facc15]/10 p-4 rounded-xl border border-[#facc15]/20"></div>
+
+                @* sectiune upload cover photo *@
+                <div class="flex flex-col gap-3">
+                    <label class="text-white text-xs font-black uppercase tracking-[0.2em]">Cover Photo</label>
+                    <div class="relative h-48 w-full rounded-2xl border-2 border-dashed border-[#2d3640] bg-[#1c2228] hover:border-[#2dd4bf]/50 transition-all flex flex-col items-center justify-center cursor-pointer group overflow-hidden">
+                        <img id="cover-preview" class="absolute inset-0 w-full h-full object-cover hidden z-10" />
+                        <input type="file" name="CoverPhotoFile" class="absolute inset-0 opacity-0 cursor-pointer z-20" accept="image/*" onchange="previewImage(event)" />
+                        <div id="upload-placeholder" class="flex flex-col items-center gap-2 text-[#94a3b8] group-hover:text-[#2dd4bf]">
+                            <span class="material-symbols-outlined text-4xl">add_photo_alternate</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest">Upload Cover Image</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* detalii grup *@
+                <div class="flex flex-col gap-3">
+                    <label asp-for="Name" class="text-white text-xs font-black uppercase tracking-[0.2em]">Group Name</label>
+                    <input asp-for="Name" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-2xl py-4 px-6 text-white focus:border-[#2dd4bf] focus:ring-1 focus:ring-[#2dd4bf] outline-none font-medium shadow-lg" placeholder="e.g., Saturday Morning Hikers" />
+                    <span asp-validation-for="Name" class="text-[#facc15] text-[10px] font-bold uppercase"></span>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <label asp-for="Description" class="text-white text-xs font-black uppercase tracking-[0.2em]">Description</label>
+                    <textarea asp-for="Description" rows="5" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-2xl py-4 px-6 text-white focus:border-[#2dd4bf] focus:ring-1 focus:ring-[#2dd4bf] outline-none font-medium shadow-lg resize-none" placeholder="What is this group about?"></textarea>
+                    <span asp-validation-for="Description" class="text-[#facc15] text-[10px] font-bold uppercase"></span>
+                </div>
+
+                @* butoane pentru vizibilitate *@
+                <div class="flex flex-col gap-4">
+                    <span class="text-white text-xs font-black uppercase tracking-[0.2em]">Privacy Settings</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="cursor-pointer relative group">
+                            <input type="radio" asp-for="IsPublic" value="true" class="peer sr-only" checked />
+                            <div class="flex items-start gap-4 p-5 rounded-2xl border border-[#2d3640] bg-[#1c2228] peer-checked:border-[#2dd4bf] peer-checked:bg-[#2dd4bf]/5 hover:bg-[#232d36] transition-all h-full">
+                                <span class="material-symbols-outlined text-[#94a3b8] peer-checked:text-[#2dd4bf]">public</span>
+                                <div class="flex flex-col">
+                                    <span class="text-white font-black text-sm uppercase tracking-tight">Public</span>
+                                    <span class="text-[#94a3b8] text-xs font-medium mt-1">Anyone can join instantly.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative group">
+                            <input type="radio" asp-for="IsPublic" value="false" class="peer sr-only" />
+                            <div class="flex items-start gap-4 p-5 rounded-2xl border border-[#2d3640] bg-[#1c2228] peer-checked:border-[#2dd4bf] peer-checked:bg-[#2dd4bf]/5 hover:bg-[#232d36] transition-all h-full">
+                                <span class="material-symbols-outlined text-[#94a3b8] peer-checked:text-[#2dd4bf]">lock</span>
+                                <div class="flex flex-col">
+                                    <span class="text-white font-black text-sm uppercase tracking-tight">Private</span>
+                                    <span class="text-[#94a3b8] text-xs font-medium mt-1">Members must be approved by you.</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center gap-4 mt-4">
+                    <a asp-controller="Groups" asp-action="Index" class="w-full md:w-auto px-10 py-4 text-[#94a3b8] font-black uppercase tracking-widest text-[10px]">Cancel</a>
+                    <button type="submit" class="w-full flex-1 py-5 bg-gradient-to-r from-[#2dd4bf] to-[#facc15] text-[#102220] rounded-2xl shadow-xl font-black uppercase text-[12px]">Create Squad</button>
+                </div>
+            </form>
+        </div>
+
+        @* coloana tips *@
+        <div class="hidden lg:flex w-full max-w-[320px] flex-col gap-6">
+            <div class="bg-[#1c2228] border border-[#2d3640] rounded-2xl p-6 flex flex-col gap-6 shadow-xl">
+                <div class="flex items-center gap-2 text-[#2dd4bf]">
+                    <span class="material-symbols-outlined text-sm">lightbulb</span>
+                    <span class="font-black text-[10px] uppercase tracking-widest">Pro Tips</span>
+                </div>
+                <div class="flex flex-col gap-6">
+                    <p class="text-[#94a3b8] text-xs leading-relaxed"><strong class="text-white">Cover photo:</strong> Groups with images attract more people.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // functie pentru previzualizarea copertii
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('cover-preview');
+            const placeholder = document.getElementById('upload-placeholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('opacity-0');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

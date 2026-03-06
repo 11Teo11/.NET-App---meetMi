@@ -1,0 +1,210 @@
+﻿@model ProiectDotNet.Models.Post
+
+@{
+    // setari pentru layout si titlu
+    ViewData["Title"] = "Post Details";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<div class="w-full max-w-3xl mx-auto py-8 px-4">
+    <partial name="PostDetails" model="Model" />
+
+    @* butoane administrative cu interfata de confirmare integrata in loc de confirm browser *@
+    @if ((ViewBag.AfisareButoane == true && Model.UserId == ViewBag.UserCurent) || ViewBag.EsteAdmin == true)
+    {
+        <div class="flex gap-4 mt-6 justify-end items-center relative">
+            @* buton editare stilizat *@
+            <a asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id"
+               class="bg-[#2d3640] text-white font-bold py-2.5 px-6 rounded-xl hover:bg-[#3f4954] transition-all text-xs uppercase tracking-widest text-decoration-none flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">edit</span> Edit Post
+            </a>
+
+            @* container pentru buton de stergere si confirmarea lui integrata *@
+            <div class="relative">
+                <button type="button" onclick="showMainPostConfirm()"
+                        class="bg-transparent border border-red-500/50 text-red-500 font-bold py-2.5 px-6 rounded-xl hover:bg-red-500/10 transition-all text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer">
+                    <span class="material-symbols-outlined text-sm">delete</span> Delete Post
+                </button>
+
+                @* confirmarea pentru stergere *@
+                <div id="main-post-confirm" class="hidden absolute right-0 bottom-full mb-2 bg-[#1c2228] border border-red-500/50 rounded-lg p-3 shadow-2xl z-50 flex items-center gap-3 animate-fade-in min-w-[150px]">
+                    <span class="text-[10px] text-white uppercase font-bold whitespace-nowrap">Confirm delete?</span>
+                    <form asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                        <button type="submit" class="bg-red-500 text-white p-1.5 rounded hover:bg-red-600 border-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-[14px] block">check</span>
+                        </button>
+                    </form>
+                    <button type="button" onclick="hideMainPostConfirm()" class="bg-[#2d3640] text-white p-1.5 rounded hover:bg-[#3f4954] border-0 cursor-pointer">
+                        <span class="material-symbols-outlined text-[14px] block">close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@section Scripts {
+    <script>
+        @* --- LOGICA PENTRU SPARK (LIKE) --- *@
+        function toggleSpark(postId) {
+            const btn = document.getElementById(`spark-btn-${postId}`);
+            const countSpan = document.getElementById(`spark-count-${postId}`);
+            const icon = btn.querySelector('.material-symbols-outlined');
+
+            btn.classList.add('scale-110');
+            setTimeout(() => btn.classList.remove('scale-110'), 200);
+
+            fetch(`/Posts/ToggleReaction?postId=${postId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    countSpan.innerText = data.count;
+                    if (data.isReacted) {
+                        btn.classList.remove('text-[#94a3b8]', 'hover:text-[#2dd4bf]');
+                        btn.classList.add('text-[#2dd4bf]');
+                        icon.style.fontVariationSettings = "'FILL' 1";
+                    } else {
+                        btn.classList.add('text-[#94a3b8]', 'hover:text-[#2dd4bf]');
+                        btn.classList.remove('text-[#2dd4bf]');
+                        icon.style.fontVariationSettings = "'FILL' 0";
+                    }
+                }
+            }).catch(err => console.error(err));
+        }
+
+        @* --- LOGICA PENTRU COMENTARII (AFISARE SI ADAUGARE) --- *@
+        function toggleCommentsSection(postId) {
+            const section = document.getElementById(`comments-section-${postId}`);
+            section.classList.toggle('hidden');
+            if (!section.classList.contains('hidden')) {
+                setTimeout(() => {
+                    const input = document.getElementById(`comment-input-${postId}`);
+                    if(input) input.focus();
+                }, 100);
+            }
+        }
+
+        function postComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const errorDiv = document.getElementById(`comment-error-${postId}`);
+            const content = input.value.trim();
+
+            if (!content) return;
+            if (errorDiv) errorDiv.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('postId', postId);
+            formData.append('content', content);
+
+            fetch('/Posts/AddComment', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = document.getElementById(`comments-list-${postId}`);
+                    @* template html pentru noul comentariu cu butoane de edit/delete incluse *@
+                    const html = `
+                        <div class="flex gap-3 text-sm group animate-fade-in relative" id="comm-container-${data.id}">
+                            <div class="size-8 rounded-full bg-cover bg-center shrink-0 border border-[#2d3640]"
+                                 style="background-image: url('${data.userImage}');"></div>
+                            <div class="flex flex-col bg-[#161b20] p-2.5 rounded-r-xl rounded-bl-xl border border-[#2d3640] w-full relative">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-white font-bold text-xs">${data.userName}</span>
+                                    <span class="text-[#94a3b8] text-[10px]">Just now</span>
+                                </div>
+                                <div id="comm-display-${data.id}"><p class="text-gray-300 pr-12">${data.content}</p></div>
+                                <div id="comm-edit-form-${data.id}" class="hidden mt-2">
+                                    <textarea id="comm-input-edit-${data.id}" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-lg p-2 text-sm text-white focus:outline-none focus:border-[#2dd4bf] resize-none">${data.content}</textarea>
+                                    <div class="flex gap-2 mt-2">
+                                        <button type="button" onclick="saveEdit(${data.id}, ${postId})" class="text-[10px] bg-[#2dd4bf] text-black px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Save</button>
+                                        <button type="button" onclick="toggleEdit(${data.id})" class="text-[10px] bg-gray-600 text-white px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Cancel</button>
+                                    </div>
+                                </div>
+                                <div class="absolute right-2 top-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="button" onclick="toggleEdit(${data.id})" class="text-[#94a3b8] hover:text-[#2dd4bf] bg-transparent border-0 cursor-pointer"><span class="material-symbols-outlined text-[14px]">edit</span></button>
+                                    <div class="relative inline-block">
+                                        <button type="button" onclick="showConfirm(${data.id})" class="text-[#94a3b8] hover:text-red-400 border-0 bg-transparent cursor-pointer"><span class="material-symbols-outlined text-[14px]">delete</span></button>
+                                        <div id="confirm-${data.id}" class="hidden absolute right-0 bottom-full mb-2 bg-[#1c2228] border border-red-500/50 rounded-lg p-2 flex items-center gap-2 animate-fade-in">
+                                            <span class="text-[10px] text-white uppercase font-bold">Sure?</span>
+                                            <button type="button" onclick="deleteComment(${data.id}, ${postId})" class="bg-red-500 text-white p-1 rounded border-0"><span class="material-symbols-outlined text-[12px]">check</span></button>
+                                            <button type="button" onclick="hideConfirm(${data.id})" class="bg-[#2d3640] text-white p-1 rounded border-0"><span class="material-symbols-outlined text-[12px]">close</span></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    list.insertAdjacentHTML('beforeend', html);
+                    input.value = '';
+                    const countBtn = document.getElementById(`comment-count-btn-${postId}`);
+                    if (countBtn) {
+                        let current = parseInt(countBtn.innerText.trim()) || 0;
+                        countBtn.innerText = current + 1;
+                    }
+                } else if (errorDiv) {
+                    errorDiv.innerText = data.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(err => console.error("Error posting comment:", err));
+        }
+
+        @* --- LOGICA PENTRU EDITARE SI STERGERE COMENTARII (LIPSEA) --- *@
+        function toggleEdit(id) {
+            const display = document.getElementById(`comm-display-${id}`);
+            const editForm = document.getElementById(`comm-edit-form-${id}`);
+            if (display && editForm) {
+                display.classList.toggle('hidden');
+                editForm.classList.toggle('hidden');
+            }
+        }
+
+        function saveEdit(id, postId) {
+            const input = document.getElementById(`comm-input-edit-${id}`);
+            const content = input.value.trim();
+            const errorDiv = document.getElementById(`comment-error-${postId}`);
+            if (!content) return;
+
+            const formData = new FormData();
+            formData.append('Content', content);
+
+            fetch(`/Comments/Edit/${id}`, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`comm-display-${id}`).querySelector('p').innerText = data.content;
+                    if (errorDiv) errorDiv.classList.add('hidden');
+                    toggleEdit(id);
+                } else if (errorDiv) {
+                    errorDiv.innerText = data.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            }).catch(err => console.error(err));
+        }
+
+        function deleteComment(commId, postId) {
+            fetch(`/Comments/Delete/${commId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const commElem = document.getElementById(`comm-container-${commId}`);
+                    if (commElem) {
+                        commElem.classList.add('opacity-0', 'scale-95');
+                        setTimeout(() => commElem.remove(), 300);
+                    }
+                    const countBtn = document.getElementById(`comment-count-btn-${postId}`);
+                    if (countBtn) {
+                        let current = parseInt(countBtn.innerText.trim()) || 0;
+                        if (current > 0) countBtn.innerText = current - 1;
+                    }
+                }
+            }).catch(err => console.error(err));
+        }
+
+        @* --- CONFIRMARI POSTARE SI COMENTARII --- *@
+        function showMainPostConfirm() { document.getElementById('main-post-confirm').classList.remove('hidden'); }
+        function hideMainPostConfirm() { document.getElementById('main-post-confirm').classList.add('hidden'); }
+        function showConfirm(id) { document.getElementById(`confirm-${id}`).classList.remove('hidden'); }
+        function hideConfirm(id) { document.getElementById(`confirm-${id}`).classList.add('hidden'); }
+    </script>
+}

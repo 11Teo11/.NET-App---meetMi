@@ -1,0 +1,53 @@
+﻿@model ProiectDotNet.Services.PersonalityResult
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "meetMi - Analysis Complete";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<main class="min-h-screen bg-background-dark text-white p-6 flex flex-col items-center justify-center">
+
+    <div class="max-w-4xl w-full flex flex-col items-center">
+
+        <div class="relative p-[2px] rounded-[3rem] bg-gradient-to-r from-[#facc15] to-[#13ecda] shadow-[0_0_50px_-10px_rgba(19,236,218,0.3)] overflow-hidden">
+            <div class="bg-background-dark rounded-[calc(3rem-2px)] p-12 md:p-20 flex flex-col items-center text-center">
+
+                <div class="size-24 bg-[#13ecda]/10 rounded-full flex items-center justify-center mb-10 border border-[#13ecda]/20">
+                    <span class="material-symbols-outlined text-[#13ecda] text-6xl animate-pulse">insights</span>
+                </div>
+
+                <p class="text-[#facc15] font-black uppercase tracking-[0.3em] text-sm mb-4">AI Analysis Complete</p>
+
+                @* afisarea tipului de personalitate *@
+                <h1 class="text-6xl md:text-8xl font-black mb-8 leading-tight">
+                    You are The <br />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#facc15] to-[#13ecda]">
+                        @(!string.IsNullOrEmpty(Model.PersonalityType) ? Model.PersonalityType : "Explorer")
+                    </span>
+                </h1>
+
+                <p class="text-gray-400 text-xl leading-relaxed max-w-2xl mb-14">
+                    Based on your 15 detailed responses, meetMi AI has mapped your social signature.
+                    Your frequency matches with people who value <strong>authentic connection</strong> and <strong>shared sparks</strong>.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-8 w-full justify-center items-center">
+                    @* am reparat link-ul pentru a folosi ID-ul GUID al utilizatorului *@
+                    <a href="/Profiles/Show/@UserManager.GetUserId(User)" class="group relative p-[2px] rounded-2xl bg-gradient-to-r from-[#facc15] to-[#13ecda] transition-transform hover:scale-105">
+                        <div class="bg-background-dark px-12 py-4 rounded-[14px] group-hover:bg-transparent transition-colors">
+                            <span class="text-xl font-bold text-white group-hover:text-slate-900 transition-colors">See My Profile</span>
+                        </div>
+                    </a>
+
+                    @* butonul de retake centrat *@
+                    <a asp-action="Index" class="text-gray-500 hover:text-[#facc15] font-bold text-lg transition-colors underline underline-offset-8">
+                        Retake Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>

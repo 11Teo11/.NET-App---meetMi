@@ -1,0 +1,102 @@
+﻿@* views/groups/index.cshtml *@
+@{
+    // setari titlu si layout pentru consistenta cu pagina de feed
+    ViewData["Title"] = "Communities";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+    var groupsList = ViewBag.Groups as IEnumerable<ProiectDotNet.Models.Group>;
+}
+
+<div class="w-full max-w-5xl mx-auto py-8 px-4">
+
+    @* header stilizat pentru sectiunea de grupuri *@
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 border-b border-[#2d3640] pb-8 relative z-50">
+        <div class="flex flex-col gap-2">
+            <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-white leading-none">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2dd4bf] to-[#facc15]">
+                    Communities
+                </span>
+            </h1>
+            <p class="text-[#94a3b8] text-lg font-medium tracking-wide flex items-center gap-2">
+                <span class="material-symbols-outlined text-[#2dd4bf]">diversity_3</span>
+                Find your circle and connect with squads.
+            </p>
+        </div>
+
+        @* zona actiuni dashboard in partea dreapta a header-ului *@
+        <div class="flex gap-4">
+            <a href="/Groups/New" class="bg-[#1c2228] border border-[#2d3640] hover:border-[#2dd4bf]/50 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg">
+                Create Group
+            </a>
+        </div>
+    </div>
+
+    @* zona de afisare a grupurilor sub forma de grid *@
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-0">
+        @if (groupsList != null && groupsList.Any())
+        {
+            foreach (var group in groupsList)
+            {
+                <div class="bg-[#1c2228] rounded-2xl border border-[#2d3640] shadow-xl transition-all hover:border-[#2dd4bf]/30 flex flex-col overflow-hidden group">
+                    @* afisare imagine de coperta grup sau fallback *@
+                    <div class="h-32 w-full bg-cover bg-center border-b border-[#2d3640]"
+                         style="background-image: url('@(group.CoverPhoto ?? "/images/default-group.png")');">
+                    </div>
+
+                    <div class="p-6 flex flex-col gap-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-2xl font-black text-white group-hover:text-[#2dd4bf] transition-colors tracking-tight uppercase">
+                                @group.Name
+                            </h3>
+                            <span class="px-2 py-1 rounded-lg bg-[#2dd4bf]/10 text-[#2dd4bf] text-[10px] font-black uppercase tracking-tighter border border-[#2dd4bf]/20">
+                                @(group.IsPublic ? "Public" : "Private")
+                            </span>
+                        </div>
+
+                        <p class="text-[#94a3b8] text-sm font-medium leading-relaxed line-clamp-2">
+                            @group.Description
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-[#2d3640] flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                @* zona pentru poza de profil a moderatorului *@
+                                <div class="size-6 rounded-full bg-[#2d3640] border border-[#2dd4bf]/20 overflow-hidden flex-shrink-0">
+                                    @if (!string.IsNullOrEmpty(group.Moderator?.ProfilePicture))
+                                    {
+                                        <img src="@group.Moderator.ProfilePicture" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        @* afisare initiala daca nu exista poza de profil *@
+                                        <div class="w-full h-full flex items-center justify-center text-[#2dd4bf] font-black text-[8px]">
+                                            @(group.Moderator?.FirstName?.Substring(0, 1).ToUpper() ?? "M")
+                                        </div>
+                                    }
+                                </div>
+                                <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">
+                                    Mod: @group.Moderator?.FirstName
+                                </span>
+                            </div>
+                            <a href="/Groups/Show/@group.Id" class="text-[10px] font-black uppercase tracking-[0.2em] text-[#2dd4bf] hover:underline">
+                                View Squad
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            @* mesaj pentru cazul in care nu exista grupuri create *@
+            <div class="col-span-full text-center py-24 opacity-50">
+                <span class="material-symbols-outlined text-7xl text-[#2d3640] mb-4">groups_3</span>
+                <h3 class="text-xl font-bold text-white mb-2">No squads found</h3>
+                <p class="text-[#94a3b8]">Be the one to start a new community.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@* buton plutitor pentru creare grup rapid fara iconite text *@
+<a href="/Groups/New" class="fixed bottom-8 right-8 z-50 px-10 py-5 bg-gradient-to-r from-[#2dd4bf] to-[#facc15] text-[#102220] rounded-2xl shadow-2xl transition-all transform hover:scale-105 font-black uppercase tracking-[0.2em] text-[12px] border-0">
+    Create New Group
+</a>

@@ -1,0 +1,133 @@
+﻿@* views/groups/edit.cshtml *@
+@model ProiectDotNet.Models.Group
+@{
+    ViewData["Title"] = "Edit Group";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+    // preluam permisiunile calculate in controller
+    bool isModerator = Model.ModeratorId == ViewBag.UserCurent;
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<div class="w-full max-w-5xl mx-auto py-8 px-4">
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 border-b border-[#2d3640] pb-8 relative z-50">
+        <div class="flex flex-col gap-2">
+            <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-white leading-none uppercase">
+                Edit <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2dd4bf] to-[#facc15]">Squad.</span>
+            </h1>
+            <p class="text-[#94a3b8] text-lg font-medium tracking-wide">Update group info or manage visibility.</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-12 relative z-0">
+        <div class="flex-1">
+            @if (isModerator)
+            {
+                <form asp-controller="Groups" asp-action="Edit" method="post" enctype="multipart/form-data" class="flex flex-col gap-8">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="flex flex-col gap-3">
+                        <label class="text-white text-xs font-black uppercase tracking-[0.2em]">Cover Image</label>
+                        <div class="relative h-64 w-full rounded-3xl border-2 border-dashed border-[#2d3640] bg-[#1c2228] overflow-hidden group">
+                            <img id="cover-preview" src="@(Model.CoverPhoto ?? "/images/default-group-hero.png")"
+                                 class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-20 transition-opacity z-10" />
+                            <input type="file" name="CoverPhotoFile" class="absolute inset-0 opacity-0 cursor-pointer z-20" accept="image/*" onchange="previewImage(event)" />
+                            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#94a3b8] group-hover:text-[#2dd4bf] pointer-events-none z-0">
+                                <span class="material-symbols-outlined text-4xl">edit</span>
+                                <span class="text-[10px] font-black uppercase">Change Image</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <label asp-for="Name" class="text-white text-xs font-black uppercase tracking-[0.2em]">Group Name</label>
+                        <input asp-for="Name" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-2xl py-4 px-6 text-white focus:border-[#2dd4bf] outline-none" />
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <label asp-for="Description" class="text-white text-xs font-black uppercase tracking-[0.2em]">Description</label>
+                        <textarea asp-for="Description" rows="5" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-2xl py-4 px-6 text-white focus:border-[#2dd4bf] outline-none resize-none"></textarea>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <span class="text-white text-xs font-black uppercase tracking-[0.2em]">Privacy Settings</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" asp-for="IsPublic" value="true" class="peer sr-only" />
+                                <div class="p-5 rounded-2xl border border-[#2d3640] bg-[#1c2228] peer-checked:border-[#2dd4bf] peer-checked:bg-[#2dd4bf]/5 text-center">
+                                    <span class="text-white font-black uppercase text-[10px]">Public</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" asp-for="IsPublic" value="false" class="peer sr-only" />
+                                <div class="p-5 rounded-2xl border border-[#2d3640] bg-[#1c2228] peer-checked:border-[#2dd4bf] peer-checked:bg-[#2dd4bf]/5 text-center">
+                                    <span class="text-white font-black uppercase text-[10px]">Private</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-5 bg-gradient-to-r from-[#2dd4bf] to-[#facc15] text-[#102220] rounded-2xl font-black uppercase text-[12px]">Save Changes</button>
+                </form>
+            }
+            else
+            {
+                <div class="p-10 bg-[#1c2228] rounded-3xl border border-[#2d3640] text-center">
+                    <p class="text-[#94a3b8]">Only the group moderator can edit squad details.</p>
+                </div>
+            }
+
+            @if (isModerator || isAdmin)
+            {
+                <div class="mt-12 pt-8 border-t border-[#2d3640]">
+                    @* container pentru stergere cu confirmare fara ferestre de browser *@
+                    <div id="delete-container" class="bg-red-500/5 border border-red-500/20 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div id="delete-view-default" class="flex flex-col md:flex-row items-center justify-between w-full gap-6">
+                            <p class="text-[#94a3b8] text-xs">Once you delete a squad, there is no going back.</p>
+                            <button type="button" onclick="showDeleteConfirm()" class="px-8 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[10px] hover:bg-red-600 transition-all">Delete Squad</button>
+                        </div>
+
+                        <div id="delete-view-confirm" class="hidden flex items-center justify-between w-full gap-6">
+                            <p class="text-white font-black uppercase text-[10px]">Confirm deletion?</p>
+                            <div class="flex gap-4">
+                                <button type="button" onclick="hideDeleteConfirm()" class="text-[#94a3b8] font-black uppercase text-[10px]">Cancel</button>
+                                <form asp-controller="Groups" asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                                    <button type="submit" class="px-6 py-3 bg-white text-red-600 rounded-xl font-black uppercase text-[10px]">Yes, Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // previzualizare imagine de coperta
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('cover-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.add('opacity-100');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // afisare interfata confirmare stergere
+        function showDeleteConfirm() {
+            document.getElementById('delete-view-default').classList.add('hidden');
+            document.getElementById('delete-view-confirm').classList.remove('hidden');
+        }
+
+        // ascundere interfata confirmare stergere
+        function hideDeleteConfirm() {
+            document.getElementById('delete-view-default').classList.remove('hidden');
+            document.getElementById('delete-view-confirm').classList.add('hidden');
+        }
+    </script>
+}

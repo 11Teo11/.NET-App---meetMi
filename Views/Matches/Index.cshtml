@@ -1,0 +1,89 @@
+﻿@model IEnumerable<ProiectDotNet.Controllers.UserMatchViewModel>
+
+@{
+    ViewData["Title"] = "meetMi - Find New Sparks";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<main class="flex-1 flex flex-col h-full overflow-y-auto relative bg-background-light dark:bg-background-dark font-display">
+    @* decoratiuni fundal *@
+    <div class="fixed top-0 left-0 w-full h-96 bg-primary/5 blur-[120px] pointer-events-none rounded-full translate-x-1/3 -translate-y-1/2"></div>
+
+    <div class="max-w-[1200px] w-full mx-auto p-6 md:p-10 flex flex-col gap-8 z-10">
+
+        @* header section *@
+        <header class="flex flex-col gap-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div class="flex flex-col gap-2 max-w-2xl">
+                    <h2 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+                        Your Tribe <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-300">Found</span>
+                    </h2>
+                    <p class="text-slate-500 dark:text-[#9db9b7] text-lg">
+                        Based on your <span class="font-bold text-primary">@ViewBag.CurrentUserPersonality</span> vibes, these people match your energy.
+                    </p>
+                </div>
+            </div>
+
+            @* filtre vizuale (statice pentru design) *@
+            <div class="flex flex-wrap gap-3">
+                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-[#111817] font-bold text-sm shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+                    Top Matches
+                </button>
+            </div>
+        </header>
+
+        @* grid de recomandari *@
+        <section class="flex flex-col gap-6">
+            <h3 class="text-xl font-bold text-white">Recommended for You</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                @foreach (var match in Model)
+                {
+                    <div class="group bg-white dark:bg-[#1c2726] rounded-2xl p-5 flex flex-col gap-4 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 border border-transparent hover:border-[#283937]">
+
+                        <div class="flex justify-between items-start">
+                            <div class="relative">
+                                @* poza de profil *@
+                                <div class="w-16 h-16 rounded-full bg-cover bg-center border-2 border-primary/50 group-hover:border-primary transition-colors"
+                                     style="background-image: url('@(string.IsNullOrEmpty(match.User.ProfilePicture) ? "/images/default-avatar.png" : match.User.ProfilePicture)');">
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-primary">@match.CompatibilityScore%</span>
+                                <span class="text-[10px] font-bold tracking-widest text-[#9db9b7] uppercase">Match</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            @* nume si personalitate *@
+                            <h4 class="text-lg font-bold text-slate-900 dark:text-white">@match.User.FirstName @match.User.LastName</h4>
+                            <p class="text-xs font-medium text-primary mb-2">@match.User.PersonalityType</p>
+                            <p class="text-sm text-slate-500 dark:text-[#9db9b7] line-clamp-2 italic">
+                                "@(match.User.Description.Length > 60 ? match.User.Description.Substring(0, 60) + "..." : match.User.Description)"
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col gap-2 mt-auto">
+                            @* link catre profil *@
+                            <a href="/Profiles/Show/@match.User.Id" class="w-full py-2.5 rounded-full bg-slate-100 dark:bg-[#283937] text-slate-900 dark:text-white font-bold text-sm hover:bg-white dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                View Profile
+                            </a>
+
+                            @* buton follow folosind actiunea existenta in ProfilesController *@
+                            <form asp-controller="Profiles" asp-action="ToggleFollow" asp-route-id="@match.User.Id" method="post">
+                                <button type="submit" class="w-full py-2.5 rounded-full @(match.IsFollowing ? "bg-primary/20 text-primary" : "bg-primary text-[#111817]") font-bold text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">bolt</span>
+                                    @(match.IsFollowing ? "Following" : "Follow")
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="h-20"></div>
+    </div>
+</main>

@@ -1,0 +1,63 @@
+﻿@model ProiectDotNet.Models.Post
+
+@{
+    ViewData["Title"] = "Edit Post";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<div class="w-full max-w-2xl mx-auto py-10 px-4">
+    <div class="bg-[#18181b] p-8 rounded-3xl border border-[#2d3640]">
+        <div class="flex items-center gap-3 mb-6">
+            <a href="javascript:history.back()" class="text-[#94a3b8] hover:text-white transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <h2 class="text-2xl font-black text-white">Edit Post</h2>
+        </div>
+
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="flex flex-col gap-6">
+
+            <div>
+                <label asp-for="Text" class="text-xs font-bold text-[#94a3b8] uppercase mb-2 block">Post Content</label>
+                <textarea asp-for="Text" rows="4"
+                          class="w-full bg-black/20 border border-[#2d3640] rounded-xl text-white focus:border-[#2dd4bf] focus:ring-0 p-4 text-lg resize-none placeholder-[#52525b]"
+                          placeholder="What's happening?"></textarea>
+                <span asp-validation-for="Text" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Media))
+            {
+                <div class="relative w-full rounded-xl overflow-hidden border border-[#2d3640] group bg-black/50">
+                    <div class="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-white z-10">Current Media</div>
+
+                    <div class="flex justify-center items-center max-h-80">
+                        @if (Model.Media.EndsWith(".mp4") || Model.Media.EndsWith(".mov"))
+                        {
+                            <video controls class="max-w-full max-h-80 object-contain">
+                                <source src="@Model.Media" type="video/mp4">
+                            </video>
+                        }
+                        else
+                        {
+                            <img src="@Model.Media" class="max-w-full max-h-80 object-contain" />
+                        }
+                    </div>
+                </div>
+            }
+
+            <div>
+                <label class="text-xs font-bold text-[#94a3b8] uppercase mb-2 block">Change Media (Optional)</label>
+                <input type="file" name="Media"
+                       class="w-full text-[#94a3b8] text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#2dd4bf]/10 file:text-[#2dd4bf] hover:file:bg-[#2dd4bf]/20 cursor-pointer" />
+            </div>
+
+            <div class="flex gap-4 mt-2">
+                <a href="javascript:history.back()" class="flex-1 py-3 rounded-xl border border-[#2d3640] text-[#94a3b8] font-bold text-center hover:text-white hover:bg-[#2d3640] transition-colors text-sm uppercase tracking-widest">
+                    Cancel
+                </a>
+                <button type="submit" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#2dd4bf] to-[#facc15] text-[#102220] font-black uppercase tracking-widest shadow-lg hover:opacity-90 transition-opacity text-sm">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

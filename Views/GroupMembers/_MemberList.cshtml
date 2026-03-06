@@ -1,0 +1,101 @@
+﻿@* views/groupmembers/_memberlist.cshtml *@
+@model ProiectDotNet.Models.Group
+@{
+    bool isModerator = ViewBag.IsModerator ?? false;
+    string currentUserId = ViewBag.UserCurent;
+}
+
+<div class="bg-[#1c2228] p-6 rounded-2xl border border-[#2d3640]">
+    <h3 class="text-white font-black uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#2dd4bf] text-sm">groups</span>
+        Members (@Model.GroupMembers.Count(gm => gm.IsAccepted))
+    </h3>
+    <div class="flex flex-col gap-4">
+        @foreach (var gm in Model.GroupMembers.Where(x => x.IsAccepted))
+        {
+            <div class="flex items-center justify-between group/member">
+                <div class="flex items-center gap-3">
+                    @* afisare poza membru in lista laterala *@
+                    <div class="size-8 rounded-full bg-[#2d3640] border border-[#2dd4bf]/20 overflow-hidden flex-shrink-0">
+                        @if (!string.IsNullOrEmpty(gm.User?.ProfilePicture))
+                        {
+                            <img src="@gm.User.ProfilePicture" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            @* cerc cu initiala daca nu exista poza *@
+                            <div class="w-full h-full flex items-center justify-center text-[#2dd4bf] font-black text-[10px]">
+                                @(gm.User?.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                            </div>
+                        }
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-gray-200 text-xs font-bold">@gm.User?.FirstName @gm.User?.LastName</span>
+                        @if (gm.UserId == Model.ModeratorId)
+                        {
+                            <span class="text-[8px] text-[#facc15] font-black uppercase tracking-widest">Moderator</span>
+                        }
+                    </div>
+                </div>
+
+                @if (isModerator && gm.UserId != currentUserId)
+                {
+                    @* container relativ pentru a pozitiona confirmarea peste buton *@
+                    <div class="relative flex items-center">
+                        @* butonul initial de eliminare *@
+                        <button type="button" id="btn-start-rem-@gm.UserId" onclick="toggleMemberRem('@gm.UserId', true)" 
+                                class="text-red-500/40 hover:text-red-500 transition-colors border-0 bg-transparent p-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">person_remove</span>
+                        </button>
+
+                        @* zona de confirmare integrata - ascunsa initial *@
+                        <div id="confirm-box-rem-@gm.UserId" class="hidden absolute right-0 bg-[#1c2228] border border-red-500/50 rounded-lg p-1.5 shadow-2xl z-50 flex items-center gap-2 animate-fade-in">
+                            <span class="text-[9px] text-white uppercase font-black whitespace-nowrap">Sure?</span>
+                            
+                            <form asp-controller="GroupMembers" asp-action="Remove" method="post" class="m-0 flex">
+                                <input type="hidden" name="groupId" value="@Model.Id" />
+                                <input type="hidden" name="userId" value="@gm.UserId" />
+                                <button type="submit" class="bg-red-500 text-white p-1 rounded hover:bg-red-600 border-0 cursor-pointer flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[12px]">check</span>
+                                </button>
+                            </form>
+
+                            <button type="button" onclick="toggleMemberRem('@gm.UserId', false)" 
+                                    class="bg-[#2d3640] text-white p-1 rounded hover:bg-[#3f4954] border-0 cursor-pointer flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[12px]">close</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+
+<script>
+    @* functie pentru a comuta intre butonul de remove si confirmarea integrata *@
+    function toggleMemberRem(userId, show) {
+        const startBtn = document.getElementById(`btn-start-rem-${userId}`);
+        const confirmBox = document.getElementById(`confirm-box-rem-${userId}`);
+        
+        if (show) {
+            startBtn.classList.add('hidden');
+            confirmBox.classList.remove('hidden');
+        } else {
+            startBtn.classList.remove('hidden');
+            confirmBox.classList.add('hidden');
+        }
+    }
+</script>
+
+<style>
+    @* animatie simpla pentru aparitia confirmarii *@
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateX(5px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out forwards;
+    }
+</style>

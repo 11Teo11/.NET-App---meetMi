@@ -1,0 +1,78 @@
+﻿@model ProiectDotNet.Models.Message
+@{
+    // preluam permisiunile calculate in groups show
+    bool isModerator = ViewBag.IsModerator ?? false;
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    string currentUserId = ViewBag.UserCurent;
+}
+
+<div class="bg-[#1c2228]/50 p-6 rounded-2xl border border-[#2d3640] group/msg transition-all hover:bg-[#1c2228]">
+    <div class="flex justify-between items-start mb-4">
+        <div class="flex gap-3 items-center">
+            @* zona pentru poza de profil a utilizatorului *@
+            <div class="size-10 rounded-full bg-[#2d3640] border border-[#2dd4bf]/20 overflow-hidden flex-shrink-0">
+                @if (!string.IsNullOrEmpty(Model.User?.ProfilePicture))
+                {
+                    <img src="@Model.User.ProfilePicture" class="w-full h-full object-cover" />
+                }
+                else
+                {
+                    @* afisare initiala daca nu exista poza de profil *@
+                    <div class="w-full h-full flex items-center justify-center text-[#2dd4bf] font-black text-xs">
+                        @(Model.User?.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                    </div>
+                }
+            </div>
+            <div class="flex flex-col">
+                <span class="text-white font-black text-sm uppercase">@Model.User?.FirstName @Model.User?.LastName</span>
+                <span class="text-[#94a3b8] text-[10px]">@Model.Date.ToString("MMM dd, HH:mm")</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+            @if (Model.UserId == currentUserId)
+            {
+                @* buton declansare editare *@
+                <button onclick="toggleEdit('@Model.Id')" class="text-[#2dd4bf] hover:text-white">
+                    <span class="material-symbols-outlined text-sm">edit</span>
+                </button>
+            }
+            @if (Model.UserId == currentUserId || isModerator || isAdmin)
+            {
+                @* zona stergere cu confirmare integrata pentru a evita browser alert *@
+                <div class="flex items-center gap-2" id="msg-delete-control-@Model.Id">
+                    <button type="button" onclick="showMsgDelete('@Model.Id')" class="text-red-500 hover:text-white" id="btn-del-@Model.Id">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                    <form asp-controller="Messages" asp-action="Delete" asp-route-id="@Model.Id" method="post" class="hidden" id="form-del-@Model.Id">
+                        <button type="submit" class="text-white bg-red-600 px-2 py-1 rounded text-[8px] font-black uppercase">confirm</button>
+                        <button type="button" onclick="hideMsgDelete('@Model.Id')" class="text-[#94a3b8] text-[8px] font-black uppercase ml-1">cancel</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div id="msg-content-@Model.Id">
+        <p class="text-gray-200 text-base leading-relaxed">@Model.Content</p>
+    </div>
+
+    @if (Model.UserId == currentUserId)
+    {
+        @* formular editare ascuns *@
+        <form id="edit-form-@Model.Id" asp-controller="Messages" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="hidden mt-2">
+            <textarea name="content" class="w-full bg-[#2d3640] border-0 rounded-xl text-white text-sm p-3 focus:ring-1 focus:ring-[#2dd4bf]">@Model.Content</textarea>
+            <div class="flex gap-2 mt-2">
+                <button type="submit" class="text-[8px] font-black uppercase tracking-widest text-[#2dd4bf]">Save</button>
+                <button type="button" onclick="toggleEdit('@Model.Id')" class="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">Cancel</button>
+            </div>
+        </form>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Media))
+    {
+        <div class="mt-4 rounded-xl overflow-hidden border border-[#2d3640]">
+            <img src="@Model.Media" class="w-full object-cover max-h-96" />
+        </div>
+    }
+</div>

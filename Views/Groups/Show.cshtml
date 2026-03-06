@@ -1,0 +1,98 @@
+﻿@model ProiectDotNet.Models.Group
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+
+    bool isMember = ViewBag.IsMember ?? false;
+    bool isModerator = ViewBag.IsModerator ?? false;
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    bool restricted = ViewBag.RestrictedAccess ?? false;
+}
+
+<div class="w-full max-w-5xl mx-auto py-8 px-4">
+    <div class="relative w-full rounded-3xl overflow-hidden min-h-[320px] bg-[#1c2228] mb-10 border border-[#2d3640] shadow-2xl">
+        <div class="absolute inset-0 bg-cover bg-center opacity-40"
+             style="background-image: url('@(Model.CoverPhoto ?? "/images/default-group-hero.png")');"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#102220] via-transparent to-transparent"></div>
+
+        <div class="absolute bottom-0 p-8 flex flex-col gap-4 w-full">
+            <div class="flex items-center gap-3">
+                <a href="/Groups/Index" class="text-white hover:text-[#2dd4bf] bg-black/20 p-2 rounded-full backdrop-blur-md transition-all">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </a>
+                <span class="text-[#2dd4bf] text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 px-3 py-1 rounded-full border border-[#2dd4bf]/20 backdrop-blur-md">
+                    @(Model.IsPublic ? "Public Community" : "Private Squad")
+                </span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-white uppercase leading-none">@Model.Name</h1>
+            <p class="text-white/80 text-xl font-medium tracking-wide max-w-3xl">@Model.Description</p>
+        </div>
+    </div>
+
+    @* afisare erori *@
+    @if (TempData["message"] != null)
+    {
+        <div class="mb-6 p-4 rounded-2xl border flex items-center gap-3 animate-pulse @(TempData["messageType"]?.ToString() == "alert-danger" ? "bg-red-500/10 border-red-500/50 text-red-500" : "bg-[#2dd4bf]/10 border-[#2dd4bf]/50 text-[#2dd4bf]")">
+            <span class="material-symbols-outlined">info</span>
+            <p class="font-bold text-sm">@TempData["message"]</p>
+        </div>
+    }
+
+    <div class="flex flex-col lg:flex-row gap-8 relative z-0">
+        <div class="flex-1 flex flex-col gap-6">
+            @if (restricted)
+            {
+                <div class="bg-[#1c2228] p-12 rounded-3xl border border-[#2d3640] text-center shadow-xl">
+                    <span class="material-symbols-outlined text-6xl text-[#2d3640] mb-4">lock</span>
+                    <h2 class="text-2xl font-black text-white mb-2">This Squad is Private</h2>
+                    <p class="text-[#94a3b8]">Join this community to see its messages and participate in the discussion.</p>
+                </div>
+            }
+            else
+            {
+                @if (isMember || isModerator || isAdmin)
+                {
+                    @await Html.PartialAsync("~/Views/Messages/_MessageForm.cshtml", new { GroupId = Model.Id })
+                }
+
+                @foreach (var msg in Model.Messages.OrderByDescending(m => m.Date))
+                {
+                    @await Html.PartialAsync("~/Views/Messages/_MessageItem.cshtml", msg)
+                }
+            }
+        </div>
+
+        <div class="w-full lg:w-80 flex flex-col gap-6">
+            @await Html.PartialAsync("~/Views/GroupMembers/_GroupActions.cshtml", Model)
+            @await Html.PartialAsync("~/Views/GroupMembers/_MemberList.cshtml", Model)
+        </div>
+    </div>
+</div>
+
+<script>
+    // comutare intre vizualizare mesaj si formular editare
+    function toggleEdit(id) {
+        const content = document.getElementById('msg-content-' + id);
+        const form = document.getElementById('edit-form-' + id);
+        content.classList.toggle('hidden');
+        form.classList.toggle('hidden');
+    }
+
+    // confirmare parasire grup
+    function toggleLeaveConfirm(show) {
+        document.getElementById('member-actions').classList.toggle('hidden', show);
+        document.getElementById('leave-confirm-ui').classList.toggle('hidden', !show);
+    }
+
+    // afisare controlere stergere mesaj
+    function showMsgDelete(id) {
+        document.getElementById('btn-del-' + id).classList.add('hidden');
+        document.getElementById('form-del-' + id).classList.remove('hidden');
+    }
+
+    // ascundere controlere stergere mesaj
+    function hideMsgDelete(id) {
+        document.getElementById('btn-del-' + id).classList.remove('hidden');
+        document.getElementById('form-del-' + id).classList.add('hidden');
+    }
+</script>

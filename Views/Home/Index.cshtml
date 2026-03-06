@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+}
+
+@* containerul principal care centreaza continutul pe inaltime *@
+<div class="max-w-7xl mx-auto flex flex-col justify-center min-h-[70vh]">
+
+    @* hero section: zona principala de impact *@
+    <div class="flex flex-col gap-8">
+
+        @* layout pe doua coloane (text stanga, buton dreapta pe desktop) *@
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
+
+            @* coloana de text *@
+            <div class="flex flex-col gap-6 max-w-3xl">
+
+                @* badge-ul mic de sus: students in a new city *@
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 w-fit">
+                    <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                    <span class="text-primary text-[10px] font-black uppercase tracking-[0.2em]">Students in a new city</span>
+                </div>
+
+                @* TITLUL PRINCIPAL CU GRADIENT *@
+                <h1 class="text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter text-white">
+                    FIND YOUR <br />
+                    @* aplicam clasa .text-gradient definita in layout pentru efectul turcoaz-galben *@
+                    <span class="text-gradient uppercase">LOCAL PEOPLE.</span>
+                </h1>
+
+                @* descrierea platformei *@
+                <div class="flex flex-col gap-4">
+                    <p class="text-xl md:text-2xl text-white font-bold leading-tight">
+                        Join a community that values authentic connection over metrics. No algorithms, just people.
+                    </p>
+                    <p class="text-gray-400 text-lg md:text-xl leading-relaxed max-w-2xl">
+                        Moved to a new city for school? Don't just study—live. Discover fellow students who share your specific interests and build meaningful friendships away from the noise.
+                    </p>
+                </div>
+            </div>
+
+            @* butonul de inregistrare (apare doar daca NU esti logat) *@
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <div class="relative group">
+                    @* efectul de stralucire (glow) din spatele butonului *@
+                    <div class="absolute -inset-4 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-all"></div>
+
+                    @* butonul efectiv cu gradient *@
+                    <a asp-area="Identity" asp-page="/Account/Register"
+                       class="flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-gradient-to-r from-primary to-accent-yellow text-[#102220] font-black uppercase tracking-widest hover:scale-105 transition-all relative z-10 shadow-lg">
+                        <span class="material-symbols-outlined font-black">bolt</span>
+                        Join meetMi
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

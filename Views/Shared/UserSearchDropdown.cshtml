@@ -1,0 +1,29 @@
+﻿@model IEnumerable<ProiectDotNet.Models.ApplicationUser>
+
+@* verificam daca avem rezultate *@
+@if (Model != null && Model.Any())
+{
+    <div class="flex flex-col">
+        @foreach (var user in Model)
+        {
+            <a href="/Profiles/Show/@user.Id" class="flex items-center gap-3 p-3 hover:bg-[#2d3640] transition-colors border-b border-[#2d3640] last:border-0 first:rounded-t-xl last:rounded-b-xl text-decoration-none group">
+                @* avatar mic *@
+                <div class="size-8 rounded-full bg-cover bg-center border border-[#2d3640] group-hover:border-[#2dd4bf]"
+                     style="background-image: url('@(user.ProfilePicture ?? "/images/default-avatar.png")');"></div>
+
+                @* info user *@
+                <div class="flex flex-col">
+                    <span class="text-white text-sm font-bold group-hover:text-[#2dd4bf]">@user.FirstName @user.LastName</span>
+                    <span class="text-[#94a3b8] text-xs">@@@user.UserName</span>
+                </div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    @* mesaj cand nu se gaseste nimeni *@
+    <div class="p-4 text-center text-[#94a3b8] text-sm italic">
+        no users found.
+    </div>
+}

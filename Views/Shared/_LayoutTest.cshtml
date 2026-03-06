@@ -1,0 +1,205 @@
+﻿@using Microsoft.AspNetCore.Identity
+@* injectam managerii pentru a verifica daca userul e logat si cine este *@
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@* injectam contextul bazei de date pentru a verifica accesul in comunitati *@
+@inject ProiectDotNet.Data.ApplicationDbContext db
+
+@{
+    // preluam numele controller-ului si actiunii curente din url
+    // asta ne ajuta sa stim pe ce pagina ne aflam
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    // definim stilurile pentru starea activa (cand esti pe pagina) si inactiva
+    // activ: turcoaz, scris ingrosat
+    var activeStyle = "text-primary text-sm font-bold uppercase tracking-widest";
+    // inactiv: gri, scris mediu, se face turcoaz la hover
+    var inactiveStyle = "text-gray-400 hover:text-primary text-sm font-medium uppercase tracking-widest transition-colors";
+}
+
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - meetMi</title>
+
+    @* importam fonturile si iconitele google *@
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Noto+Sans:wght@400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    @* configuram tailwind css cu culorile specifice temei *@
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+               tailwind.config = {
+                   darkMode: "class",
+                   theme: {
+
+
+                       extend: {
+                           colors: {
+                               "primary": "#13ecda",       /* turcoaz */
+                               "accent-yellow": "#f9e015", /* galben
+        */
+
+                               "background-dark": "#102220", /* fundal negru-verzui */
+                               "surface-dark": "#111817",    /* fundal panouri */
+                           }
+
+
+                       }
+
+                   }
+               }
+    </script>
+
+    @* stiluri custom pentru efectul de gradient pe text *@
+    <style>
+        .text-gradient {
+            background: linear-gradient(to right, #13ecda, #f9e015);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display text-white antialiased">
+    <div class="flex h-screen w-full flex-col">
+
+        @* header: bara de sus fixa - crescut z-index pentru a fi peste bara de progres a quiz-ului *@
+        <header class="flex-none flex items-center justify-between px-6 lg:px-10 py-4 bg-surface-dark border-b border-white/5 z-[60]">
+            @* logo si nume aplicatie *@
+            <div class="flex items-center gap-4">
+
+
+                <div class="size-8 text-primary">
+                    <span class="material-symbols-outlined text-[32px]">bolt</span>
+                </div>
+                <h2 class="text-xl font-bold leading-tight tracking-tight text-gradient">meetMi</h2>
+            </div>
+
+
+            @* meniu central cu link-uri dinamice *@
+
+            <nav class="hidden md:flex flex-1 justify-center gap-8">
+
+                @* link 1: getting started (home) *@
+                @* verificam daca suntem pe controllerul home *@
+                <a class="@(currentController == "Home" ? activeStyle : inactiveStyle)"
+                   asp-controller="Home" asp-action="Index">Getting Started</a>
+
+                @* link 2: feed (postari) *@
+                @* verificam daca suntem pe controllerul posts *@
+                <a class="@(currentController == "Posts" ? activeStyle : inactiveStyle)"
+                   asp-controller="Posts" asp-action="Index">Feed</a>
+
+                @* link 3: communities (grupuri) *@
+                @* verificam daca suntem pe controllerul groups *@
+                <a class="@(currentController == "Groups" ? activeStyle : inactiveStyle)"
+                   asp-controller="Groups" asp-action="Index">Communities</a>
+
+                @* link 4: find new sparks (matches) *@
+                @* verificam daca suntem pe controllerul matches *@
+                <a class="@(currentController == "Matches" ? activeStyle : inactiveStyle)"
+                   asp-controller="Matches" asp-action="Index">Find New Sparks</a>
+
+            </nav>
+
+            @* zona din dreapta: login sau profil *@
+            <div class="flex items-center gap-4">
+                @* apelam fisierul partial pentru logica de login *@
+                <partial name="_LoginPartial" />
+
+            </div>
+
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+
+            @* sidebar stanga: arata pasii de urmat *@
+            <aside class="hidden lg:flex flex-col w-72 h-full border-r border-white/5 bg-surface-dark p-6 overflow-y-auto">
+                <div class="flex flex-col gap-8">
+
+                    <div class="flex flex-col gap-4 items-center">
+                        <span class="material-symbols-outlined text-primary text-6xl drop-shadow-[0_0_15px_rgba(19,236,218,0.3)]">lock</span>
+                        <div class="flex flex-col text-center">
+
+                            <h1 class="text-white text-lg font-bold uppercase leading-tight">Unlock Potential Sparks:</h1>
+
+                            <p class="text-primary text-[10px] font-black uppercase tracking-widest">Complete the steps below</p>
+                        </div>
+
+
+                        @* lista pasilor *@
+
+                        <div class="flex flex-col gap-2 mt-2 w-full">
+                            @* pasul 1: creare cont *@
+
+                            @{
+                                var isStep1Done = User.Identity.IsAuthenticated;
+                                // Preluam obiectul de user pentru a verifica daca a facut testul
+                                var currentUser = isStep1Done ? await UserManager.GetUserAsync(User) : null;
+                                var isStep2Done = currentUser?.PersonalityType != null;
+                                var isStep3Done = isStep1Done && currentUser != null && db.GroupMembers.Any(gm => gm.UserId == currentUser.Id);
+                            }
+                            <div class="flex items-center gap-3 px-4 py-3 rounded-xl @(isStep1Done ? "bg-primary/10 border border-primary/20" : "bg-white/5 border border-white/5 opacity-50")">
+                                <span class="material-symbols-outlined @(isStep1Done ? "text-primary" : "text-gray-500")">
+
+
+                                    @(isStep1Done ? "check_circle" : "radio_button_unchecked")
+                                </span>
+
+                                <p class="text-[10px] font-black uppercase tracking-widest">1. Create Account</p>
+                            </div>
+
+                            @* pasul 2: quiz - MODIFICAT SA FIE CLICKABLE *@
+
+                            <a href="@(isStep1Done ? (isStep2Done ? "/Quiz/Results" : "/Quiz/Index") : "#")"
+                               class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-decoration-none
+                                      @(isStep2Done ? "bg-primary/10 border border-primary/20" : (isStep1Done ? "bg-white/5 border border-white/10 hover:bg-white/10" : "bg-white/5 border border-white/5 opacity-50 cursor-not-allowed"))">
+
+                                <span class="material-symbols-outlined @(isStep2Done ? "text-primary" : "text-gray-500")">
+                                    @(isStep2Done ? "check_circle" : "interests")
+
+                                </span>
+                                <p class="text-[10px] font-black uppercase tracking-widest @(isStep2Done ? "text-white" : "text-gray-400")">
+                                    2. Personality Quiz
+
+                                </p>
+                            </a>
+
+                            @* pasul 3: comunitati *@
+                            <a href="@(isStep1Done ? "/Groups/Index" : "#")"
+                               class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-decoration-none
+                                @(isStep3Done ? "bg-primary/10 border border-primary/20" : (isStep1Done ? "bg-white/5 border border-white/10 hover:bg-white/10" : "bg-white/5 border border-white/5 opacity-50 cursor-not-allowed"))">
+
+                                <span class="material-symbols-outlined @(isStep3Done ? "text-primary" : "text-gray-500")">
+                                    @(isStep3Done ? "check_circle" : "group_add")
+                                </span>
+
+                                <p class="text-[10px] font-black uppercase tracking-widest @(isStep3Done ? "text-white" : "text-gray-400")">
+                                    3. Join Communities
+                                </p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </aside>
+
+            @* zona principala unde se incarca pagini *@
+            <main class="flex-1 overflow-y-auto bg-[#0F1115]">
+                @* aici se injecteaza codul specific fiecarei pagini *@
+                @RenderBody()
+
+            </main>
+        </div>
+
+    </div>
+
+    @* incarcam scripturile necesare *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

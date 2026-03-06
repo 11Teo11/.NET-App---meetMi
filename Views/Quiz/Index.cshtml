@@ -1,0 +1,128 @@
+﻿@{
+    ViewData["Title"] = "meetMi - Personality Quiz";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+
+    // intrebari quiz
+    var questions = new[] {
+        new { q = "Where can we find you on a Friday night?", options = new[] { "At a high-energy club", "Exploring a hidden bar", "Hosting an intimate dinner", "At home with a good book" } },
+        new { q = "How do you start a conversation with a stranger?", options = new[] { "With a bold joke", "Asking about their interests", "Offering a compliment", "Observing before speaking" } },
+        new { q = "What is your ideal travel style?", options = new[] { "Packed with activities", "Spontaneous adventure", "Culturally immersive", "Carefully planned" } },
+        new { q = "How do you handle large social gatherings?", options = new[] { "I am the life of the party", "I hop between groups", "I stick to people I know", "I find a quiet spot to talk" } },
+        new { q = "What kind of projects do you enjoy most?", options = new[] { "Leading a big team", "Creative brainstorming", "Helping others succeed", "Detailed problem solving" } },
+        new { q = "How do you recharge your energy?", options = new[] { "Going out with friends", "A solo walk in the city", "Deep talk with one person", "Complete solitude" } },
+        new { q = "What is your reaction to sudden change?", options = new[] { "I embrace it instantly", "I find it exciting", "I adapt to keep peace", "I analyze the impact first" } },
+        new { q = "How do you prefer to communicate?", options = new[] { "Quick calls or voice notes", "Visuals and stories", "Meaningful long texts", "Precise emails" } },
+        new { q = "What attracts you to a new friend?", options = new[] { "Their confidence", "Their curiosity", "Their kindness", "Their intelligence" } },
+        new { q = "How do you make big decisions?", options = new[] { "Following my gut", "Checking all possibilities", "Consulting my loved ones", "Looking at the data" } },
+        new { q = "What is your role in a group conflict?", options = new[] { "The one who takes charge", "The one who lightens the mood", "The mediator", "The logical observer" } },
+        new { q = "How do you feel about meeting new people?", options = new[] { "Extremely excited", "Interested and open", "A bit shy but friendly", "Reserved and selective" } },
+        new { q = "What defines your personal space?", options = new[] { "An open door for everyone", "A collection of memories", "A cozy sanctuary", "An organized workstation" } },
+        new { q = "What is your favorite type of conversation?", options = new[] { "Debating big ideas", "Sharing wild stories", "Emotional connection", "Exchanging knowledge" } },
+        new { q = "How do you want people to remember you?", options = new[] { "As a charismatic leader", "As a creative spirit", "As a loyal friend", "As a wise advisor" } }
+    };
+}
+
+@* container principal pentru quiz *@
+<div class="min-h-screen bg-background-dark text-white font-display">
+
+    @* bara de progres: am pus sticky top-0 si am adaugat backdrop-blur pentru vizibilitate la scroll  *@
+    <div class="sticky top-0 z-[100] bg-background-dark/90 backdrop-blur-md border-b border-white/10 px-6 py-6 shadow-2xl">
+        <div class="max-w-4xl mx-auto flex flex-col gap-3">
+            <div class="flex justify-between items-end">
+                <p class="text-primary font-bold text-xs uppercase tracking-widest">Quiz Progress</p>
+                <p id="progress-text" class="text-white/60 text-sm font-medium">0 of 15 answered</p>
+            </div>
+            <div class="h-3 w-full rounded-full bg-white/5 overflow-hidden border border-white/10">
+                @* am aplicat gradientul pe bara de progres conform identitatii vizuale  *@
+                <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-[#facc15] to-[#13ecda] transition-all duration-500 ease-out" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    @* zona de continut a quiz-ului care se va deplasa pe sub bara de progres *@
+    <div class="max-w-4xl mx-auto px-4 py-16 md:px-8 lg:px-12">
+
+        @* antetul paginii cu titlu si descriere *@
+        <div class="text-center mb-20">
+            <h1 class="text-5xl md:text-6xl font-black mb-6 tracking-tight">
+                Unlock Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#facc15] to-[#13ecda]">meetMi Vibe</span>
+            </h1>
+            <p class="text-gray-400 text-xl max-w-2xl mx-auto">Answer these 15 signals to let our AI find your social frequency.</p>
+        </div>
+
+        @* formularul pentru trimiterea raspunsurilor *@
+        <form asp-action="Submit" method="post" id="quiz-form" class="flex flex-col gap-16">
+
+            @* generam fiecare intrebare din array-ul definit la inceput *@
+            @for (int i = 0; i < questions.Length; i++)
+            {
+                <div class="glass-card rounded-[2.5rem] p-10 border border-white/5 hover:border-primary/20 transition-all duration-500 shadow-2xl">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-8 flex gap-5">
+                        <span class="text-[#facc15]/30">@(i + 1)</span>
+                        @questions[i].q
+                    </h3>
+
+                    @* grilele cu optiuni de raspuns  *@
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        @foreach (var option in questions[i].options)
+                        {
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="answers[@i]" value="@option.ToLower()" class="sr-only peer quiz-radio" required />
+
+                                @* stilizarea butonului de tip radio custom  *@
+                                <div class="flex items-center p-6 rounded-2xl bg-white/[0.03] border border-white/10 peer-checked:border-[#13ecda] peer-checked:bg-[#13ecda]/10 hover:bg-white/[0.08] transition-all duration-300 peer-checked:[&_.radio-check]:scale-100">
+                                    <div class="size-6 rounded-full border-2 border-white/20 mr-4 flex items-center justify-center peer-checked:border-[#13ecda] transition-colors">
+                                        <div class="radio-check size-3 bg-[#13ecda] rounded-full transform scale-0 transition-transform duration-300 shadow-[0_0_10px_#13ecda]"></div>
+                                    </div>
+                                    <span class="text-gray-400 font-semibold text-lg group-hover:text-white transition-colors">@option</span>
+                                </div>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* sectiunea butonului de finalizare  *@
+            <div class="flex justify-center mt-10 pb-20">
+                <button type="submit" class="group relative p-[3px] rounded-2xl bg-gradient-to-r from-[#facc15] to-[#13ecda] transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-[#13ecda]/20">
+                    <div class="bg-background-dark px-16 py-5 rounded-[13px] group-hover:bg-transparent transition-colors">
+                        <span class="text-2xl font-black text-white group-hover:text-slate-900 transition-colors uppercase tracking-widest">Get My Results</span>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* logica scriptului pentru actualizarea dinamica a barei de progres  *@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('.quiz-radio');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const totalQuestions = 15;
+
+        function updateProgress() {
+            // calculam numarul de intrebari la care s-a raspuns
+            const answeredCount = new Set(Array.from(document.querySelectorAll('.quiz-radio:checked')).map(r => r.name)).size;
+            const percentage = (answeredCount / totalQuestions) * 100;
+
+            // actualizam elementele vizuale ale barei
+            progressBar.style.width = percentage + '%';
+            progressText.innerText = answeredCount + ' of ' + totalQuestions + ' answered';
+        }
+
+        // adaugam evenimentul de ascultare pe fiecare buton radio
+        radios.forEach(radio => {
+            radio.addEventListener('change', updateProgress);
+        });
+    });
+</script>
+
+@* stiluri specifice ca sa arate ca sticla  *@
+<style>
+    .glass-card {
+        background: rgba(26, 44, 42, 0.4);
+        backdrop-filter: blur(20px);
+    }
+</style>

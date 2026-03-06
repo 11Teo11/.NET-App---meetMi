@@ -1,0 +1,67 @@
+﻿@* views/messages/_messageform.cshtml *@
+@model dynamic
+@{
+    // preluam id-ul grupului din obiectul anonim trimis de pagina show
+    int groupId = Model.GroupId;
+}
+
+<div class="bg-[#1c2228] p-5 rounded-2xl border border-[#2d3640] shadow-xl">
+    @* formularul trimite datele catre controllerul de mesaje, actiunea create *@
+    <form asp-controller="Messages" asp-action="Create" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="groupId" value="@groupId" />
+
+        <div class="flex flex-col gap-4">
+            @* campul principal de text pentru mesaj *@
+            <textarea name="content" rows="2" required
+                      class="w-full bg-transparent border-0 text-white placeholder-[#52525b] focus:ring-0 resize-none text-lg font-medium p-0"
+                      placeholder="Write a message to the squad..."></textarea>
+
+            @* container care apare doar cand userul alege o poza de trimis *@
+            <div id="message-preview-container" class="hidden relative w-32 h-32 rounded-xl overflow-hidden border border-[#2d3640]">
+                <img id="message-image-preview" src="#" class="w-full h-full object-cover" />
+                <button type="button" onclick="clearMedia()" class="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1">
+                    <span class="material-symbols-outlined text-xs">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-4 pt-4 border-t border-[#2d3640]">
+            <div class="flex gap-2">
+                @* input de tip file ascuns pentru a folosi iconita de camera personalizata *@
+                <input type="file" name="media" id="group-media-upload" class="hidden" accept="image/*" onchange="previewMessageImage(event)" />
+                <label for="group-media-upload" class="text-[#2dd4bf] hover:bg-[#2dd4bf]/10 p-2 rounded-xl cursor-pointer transition-colors">
+                    <span class="material-symbols-outlined">photo_camera</span>
+                </label>
+            </div>
+            <button type="submit" class="bg-gradient-to-r from-[#2dd4bf] to-[#22d3ee] text-[#0f1115] font-black py-2 px-8 rounded-xl uppercase tracking-widest text-[10px]">
+                Send Message
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // functie care arata userului o previzualizare a fotografiei alese inainte de trimitere
+    function previewMessageImage(event) {
+        const input = event.target;
+        const container = document.getElementById('message-preview-container');
+        const preview = document.getElementById('message-image-preview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.classList.remove('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // functie pentru resetarea selectiei de media
+    function clearMedia() {
+        const input = document.getElementById('group-media-upload');
+        const container = document.getElementById('message-preview-container');
+        input.value = "";
+        container.classList.add('hidden');
+    }
+</script>

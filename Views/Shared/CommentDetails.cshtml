@@ -1,0 +1,49 @@
+﻿@model ProiectDotNet.Models.Comment
+@using Microsoft.AspNetCore.Identity
+@* injectam usermanager pentru a identifica utilizatorul fara a depinde de viewbag *@
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    // preluam id-ul utilizatorului logat in mod direct
+    var currentUserId = UserManager.GetUserId(User);
+    // verificam daca utilizatorul este autorul comentariului sau administrator
+    var isAuthor = Model.UserId == currentUserId;
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="d-flex mb-3">
+    <div class="flex-shrink-0 me-3">
+        <i class="bi bi-person-circle fs-3 text-secondary"></i>
+    </div>
+
+    <div class="flex-grow-1">
+        <div class="d-flex align-items-baseline">
+            <strong class="me-2">@Model.User?.FirstName @Model.User?.LastName</strong>
+            <small class="text-muted">@Model.Date.ToString("dd MMM HH:mm")</small>
+        </div>
+
+        <p class="m-0" style="white-space: pre-wrap;">@Model.Content</p>
+
+        @* butoanele apar pe baza verificarii de identitate si rol *@
+        @if (isAuthor || isAdmin)
+        {
+            <div class="d-flex mt-1">
+                @* doar autorul poate edita comentariul propriu *@
+                @if (isAuthor)
+                {
+                    <a class="text-decoration-none me-2 small"
+                       asp-controller="Comments"
+                       asp-action="Edit"
+                       asp-route-id="@Model.Id">
+                        Edit
+                    </a>
+                }
+
+                @* atat autorul cat si adminul pot sterge comentariul *@
+                <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@Model.Id">
+                    <button class="btn btn-link p-0 m-0 border-0 text-danger small" type="submit">Delete</button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

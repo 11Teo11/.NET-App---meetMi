@@ -1,0 +1,127 @@
+﻿@page
+@model RegisterModel
+@{
+    // setam titlul paginii si calea catre layout-ul principal
+    ViewData["Title"] = "Register";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+@* containerul principal care centreaza formularul pe ecran *@
+<div class="flex items-center justify-center min-h-full py-12">
+
+    @* cardul formularului: fundal inchis, margini rotunjite, umbra *@
+    <div class="w-full max-w-md bg-[#121214] rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative">
+
+        @* linia de gradient de sus (accent vizual) *@
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent-yellow"></div>
+
+        @* header-ul formularului cu lacatul *@
+        <div class="flex flex-col items-center pt-8 pb-6 px-8 text-center gap-4">
+            @* iconita lacat cu efect de stralucire *@
+            <span class="material-symbols-outlined text-6xl text-primary drop-shadow-[0_0_15px_rgba(19,236,218,0.5)]">lock</span>
+
+            <h3 class="text-2xl font-bold text-white leading-tight uppercase">
+                Unlock Potential Sparks:<br />
+                <span class="text-lg font-medium text-gray-400 normal-case">Create your student profile</span>
+            </h3>
+        </div>
+
+        @* formularul propriu-zis *@
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="px-8 pb-8 flex flex-col gap-5">
+
+            @* afisare erori generale *@
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-xs font-bold text-center" role="alert"></div>
+
+            @* grup camp: prenume *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">First Name</span>
+                <div class="relative group">
+                    @* iconita din interiorul inputului *@
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-sm">person</span>
+                    </div>
+                    <input asp-for="Input.FirstName" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium" placeholder="Ex: Alex" />
+                </div>
+                <span asp-validation-for="Input.FirstName" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: nume *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Last Name</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-sm">badge</span>
+                    </div>
+                    <input asp-for="Input.LastName" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium" placeholder="Ex: Popescu" />
+                </div>
+                <span asp-validation-for="Input.LastName" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: email *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Email Address</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary">
+                        <span class="material-symbols-outlined text-sm">alternate_email</span>
+                    </div>
+                    <input asp-for="Input.Email" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary outline-none text-sm font-medium" placeholder="student@university.edu" />
+                </div>
+                <span asp-validation-for="Input.Email" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: descriere (bio) *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Short Bio</span>
+                <textarea asp-for="Input.Description" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 px-4 text-white placeholder-gray-600 focus:border-primary outline-none min-h-[80px] text-sm font-medium" placeholder="Tell us what makes you spark..."></textarea>
+                <span asp-validation-for="Input.Description" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: parola *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Password</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                    </div>
+                    <input asp-for="Input.Password" type="password" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary outline-none text-sm font-medium" placeholder="Create a secure key" />
+                </div>
+                <span asp-validation-for="Input.Password" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: confirmare parola *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Confirm Password</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary">
+                        <span class="material-symbols-outlined text-sm">lock_reset</span>
+                    </div>
+                    <input asp-for="Input.ConfirmPassword" type="password" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary outline-none text-sm font-medium" placeholder="Repeat secure key" />
+                </div>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* checkbox termeni *@
+            <div class="flex items-center gap-3 mt-2">
+                <input type="checkbox" required class="w-4 h-4 rounded bg-black/40 border-white/10 text-primary focus:ring-primary focus:ring-offset-0" />
+                <span class="text-xs text-gray-500">I agree to the <a href="#" class="text-primary hover:underline">Community Guidelines</a>.</span>
+            </div>
+
+            @* buton submit cu gradient *@
+            <button type="submit" class="group relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-r from-primary to-accent-yellow py-4 font-black uppercase tracking-widest text-[#102220] transition-all hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:scale-[1.02] mt-2">
+                <span class="flex items-center gap-2">
+                    Join meetMi & Find Your Spark
+                    <span class="material-symbols-outlined text-lg font-black">bolt</span>
+                </span>
+            </button>
+
+            @* link catre login pentru cei care au deja cont *@
+            <p class="text-center text-xs text-gray-500 mt-4">
+                Already have an account? <a asp-page="./Login" class="text-primary font-bold hover:underline">Log in</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

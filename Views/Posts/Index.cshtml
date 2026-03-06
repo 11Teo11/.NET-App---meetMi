@@ -1,0 +1,499 @@
+﻿@{
+    ViewData["Title"] = "Feed";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+
+    var postsList = ViewBag.Posts as IEnumerable<ProiectDotNet.Models.Post>;
+    var currentUserPic = ViewBag.UserProfilePic as string;
+}
+
+<div class="w-full max-w-5xl mx-auto py-8 px-4">
+
+@* --- HEADER CU SEARCH ENGINE SI NOTIFICARI --- *@
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 border-b border-[#2d3640] pb-8 relative z-50">
+        <div class="flex flex-col gap-2">
+            <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-white leading-none">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2dd4bf] to-[#facc15]">
+                    Feed
+                </span>
+            </h1>
+            <p class="text-[#94a3b8] text-lg font-medium tracking-wide flex items-center gap-2">
+                <span class="material-symbols-outlined text-[#2dd4bf]">rss_feed</span>
+                See what's happening in your circle.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-4">
+            @* zona search *@
+            <div class="w-full md:w-auto relative group">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8] group-focus-within:text-[#2dd4bf] transition-colors z-30 pointer-events-none">search</span>
+                <input type="text" id="live-search-input" placeholder="Find people..." autocomplete="off"
+                       class="w-full md:w-64 bg-[#1c2228] border border-[#2d3640] rounded-2xl py-3 pl-12 pr-10 text-white placeholder-[#52525b] focus:border-[#2dd4bf] focus:ring-1 focus:ring-[#2dd4bf] transition-all outline-none font-medium shadow-lg relative z-20" />
+                <button id="clear-search-btn" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-white transition-colors hidden z-30" onclick="clearSearch()">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+                <div id="search-dropdown-results" class="absolute top-full mt-2 left-0 w-full bg-[#1c2228] border border-[#2d3640] rounded-xl shadow-2xl overflow-hidden hidden z-50"></div>
+            </div>
+
+            @* zona notificari flw request *@
+            @if (User.Identity.IsAuthenticated)
+            {
+                var requests = ViewBag.IncomingRequests as IEnumerable<ProiectDotNet.Models.Request>;
+                var pendingCount = requests?.Count(r => r.Status == "pending") ?? 0;
+
+                <div class="relative" id="notif-container">
+                    @* butonul clopotel *@
+                    <button onclick="toggleNotifDropdown()" class="p-3 bg-[#1c2228] border border-[#2d3640] rounded-2xl text-[#94a3b8] hover:text-[#2dd4bf] hover:border-[#2dd4bf] transition-all relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        @* bulina rosie daca ai cereri in asteptare *@
+                        @if (pendingCount > 0)
+                        {
+                            <span class="absolute -top-1 -right-1 size-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border border-[#0f1115]">@pendingCount</span>
+                        }
+                    </button>
+
+                    @* dropdown content (ascuns initial) *@
+                    <div id="notif-dropdown" class="absolute top-full right-0 mt-2 w-80 bg-[#1c2228] border border-[#2d3640] rounded-xl shadow-2xl overflow-hidden hidden z-50">
+                        <div class="p-3 border-b border-[#2d3640] font-bold text-xs text-white uppercase tracking-widest bg-[#161b20]">
+                            Follow Requests
+                        </div>
+                        <div class="max-h-64 overflow-y-auto custom-scrollbar flex flex-col">
+                            @if (requests != null && requests.Any())
+                            {
+                                foreach (var req in requests)
+                                {
+                                    <div class="p-3 border-b border-[#2d3640] last:border-0 flex items-center justify-between gap-2" id="req-item-@req.Id">
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-8 rounded-full bg-cover bg-center" style="background-image: url('@(req.Sender?.ProfilePicture ?? "/images/default-avatar.png")');"></div>
+                                            <div class="flex flex-col">
+                                                <span class="text-white text-xs font-bold">@req.Sender?.FirstName</span>
+                                                <span class="text-[10px] text-[#94a3b8]">@req.Status</span>
+                                            </div>
+                                        </div>
+
+                                        @if (req.Status == "pending")
+                                        {
+                                            <div id="actions-@req.Id" class="flex gap-1">
+                                                @* butoane accept/refuse *@
+                                                <button onclick="handleRequest(@req.Id, 'accepted')" class="p-1.5 bg-[#2dd4bf]/10 text-[#2dd4bf] rounded-lg hover:bg-[#2dd4bf]/20" title="Accept">
+                                                    <span class="material-symbols-outlined text-sm">check</span>
+                                                </button>
+                                                <button onclick="handleRequest(@req.Id, 'refused')" class="p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20" title="Refuse">
+                                                    <span class="material-symbols-outlined text-sm">close</span>
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-[10px] uppercase font-black @(req.Status == "accepted" ? "text-[#2dd4bf]" : "text-red-500")">
+                                                @req.Status
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="p-4 text-center text-[#94a3b8] text-xs italic">No requests yet.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+@* --- ZONA CREARE POSTARE  --- *@
+@if (User.Identity.IsAuthenticated)
+{
+        <div class="bg-[#1c2228] p-5 rounded-2xl border border-[#2d3640] mb-10 shadow-xl transition-all hover:border-[#2dd4bf]/30 relative z-0">
+            <form asp-controller="Posts" asp-action="New" method="post" enctype="multipart/form-data">
+
+            @* afisare eroare AI daca exista in TempData *@
+            @if (TempData["PostErrorMessage"] != null)
+            {
+                <div class="mb-4 bg-red-500/10 border border-red-500/20 p-4 rounded-xl animate-bounce">
+                    <div class="flex items-center gap-3 text-red-400">
+                        <span class="material-symbols-outlined text-sm">warning</span>
+                        <span class="text-xs font-bold uppercase tracking-widest">
+                            @TempData["PostErrorMessage"]
+                        </span>
+                    </div>
+                </div>
+            }
+
+                <div class="flex gap-4">
+                    <div class="shrink-0">
+                        <div class="size-12 rounded-full bg-cover bg-center border-2 border-[#2d3640]"
+                             style="background-image: url('@(currentUserPic ?? "/images/default-avatar.png")');"></div>
+                    </div>
+
+                    <div class="flex-1 pt-1">
+                        <textarea name="Text" rows="2"
+                              class="w-full bg-transparent border-0 text-white placeholder-[#52525b] focus:ring-0 resize-none text-xl font-medium p-0 leading-relaxed"
+                              placeholder="What's happening?"></textarea>
+
+                        <div id="post-media-preview" class="hidden mt-4 relative w-fit">
+                            <img id="preview-img-tag" src="" class="max-h-64 rounded-xl border border-[#2d3640]" />
+                            <button type="button" onclick="clearMedia()" class="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors backdrop-blur-md">
+                                <span class="material-symbols-outlined text-sm block">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-4 pt-4 border-t border-[#2d3640]">
+                    <div class="flex gap-1">
+                        <label for="media-upload" class="text-[#2dd4bf] hover:bg-[#2dd4bf]/10 p-2.5 rounded-xl cursor-pointer transition-colors group" title="Add Photo">
+                            <span class="material-symbols-outlined group-hover:scale-110 transition-transform">photo_camera</span>
+                        </label>
+                        <input id="media-upload" type="file" name="Media" class="hidden" accept="image/*,video/*" onchange="showPreview(this)" />
+                    </div>
+
+                    <button type="submit" class="bg-gradient-to-r from-[#2dd4bf] to-[#22d3ee] text-[#0f1115] font-black py-2.5 px-8 rounded-xl transition-all shadow-lg shadow-[#2dd4bf]/20 hover:shadow-[#2dd4bf]/40 hover:scale-[1.02] uppercase tracking-widest text-xs border-0">
+                        Post Spark
+                    </button>
+                </div>
+            </form>
+        </div>
+}
+
+@* --- LISTA POSTARI --- *@
+@if (postsList != null && postsList.Any())
+{
+    @* containerul de coloane se creeaza doar daca avem postari  *@
+        <div class="columns-1 md:columns-2 gap-6 space-y-6 relative z-0">
+            @foreach (var post in postsList)
+            {
+                <partial name="PostDetails" model="post" />
+            }
+        </div>
+}
+else
+{
+    @* daca nu sunt postari, afisam mesajul centrat in afara containerului de coloane  *@
+        <div class="w-full flex flex-col items-center justify-center text-center py-24 opacity-50">
+            <span class="material-symbols-outlined text-7xl text-[#2d3640] mb-4">radar</span>
+            <h3 class="text-xl font-bold text-white mb-2">It's quiet here...</h3>
+            <p class="text-[#94a3b8]">
+                @if (User.Identity.IsAuthenticated)
+                {
+                    @* mesaj pentru utilizatori logati *@
+                    <text>Follow people to see their sparks.</text>
+                }
+                else
+                {
+                    @* mesaj pentru vizitatori *@
+                    <text>Log in to see what's happening.</text>
+                }
+            </p>
+        </div>
+}
+
+@section Scripts 
+{
+        <script>
+            // --- SEARCH LOGIC ---
+            const searchInput = document.getElementById('live-search-input');
+            const dropdown = document.getElementById('search-dropdown-results');
+            const clearBtn = document.getElementById('clear-search-btn');
+
+            if(searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    if (query.length > 0) {
+                        clearBtn.classList.remove('hidden');
+                        fetch(`/Posts/SearchUsers?query=${query}`)
+                            .then(response => response.text())
+                            .then(html => {
+                                dropdown.innerHTML = html;
+                                dropdown.classList.remove('hidden');
+                            });
+                    } else {
+                        hideDropdown();
+                    }
+                });
+            }
+
+            function clearSearch() {
+                if(searchInput) {
+                    searchInput.value = '';
+                    hideDropdown();
+                    searchInput.focus();
+                }
+            }
+
+            function hideDropdown() {
+                if(dropdown) dropdown.classList.add('hidden');
+                if(dropdown) dropdown.innerHTML = '';
+                if(clearBtn) clearBtn.classList.add('hidden');
+            }
+
+            document.addEventListener('click', function(e) {
+                if (searchInput && !searchInput.contains(e.target) && dropdown && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+                // se ascunde dropdownul cand dam click inafara lui
+                const notifDD = document.getElementById('notif-dropdown');
+                const notifBtn = document.getElementById('notif-container');
+                if (notifDD && !notifDD.classList.contains('hidden') && notifBtn && !notifBtn.contains(e.target)) {
+                    notifDD.classList.add('hidden');
+                }
+            });
+
+            // --- notificari flw request ---
+            function toggleNotifDropdown() {
+                const dd = document.getElementById('notif-dropdown');
+                if(dd) dd.classList.toggle('hidden');
+            }
+
+            function handleRequest(reqId, status) {
+                const formData = new FormData();
+                formData.append('requestId', reqId);
+                formData.append('status', status);
+
+                fetch('/Profiles/HandleRequest', { method: 'POST', body: formData })
+                .then(res => {
+                    if(!res.ok) throw new Error("Server error");
+                    return res.json();
+                })
+                .then(data => {
+                    if(data.success) {
+
+                        // cautam elementul dupa ID-ul unic pus in HTML ---
+                        const actionDiv = document.getElementById('actions-' + reqId);
+
+                        if(actionDiv) {
+                            // cream html-ul pentru noul status (Accepted/Refused)
+                            let statusHtml = '';
+                            if (status === 'accepted') {
+                                statusHtml = `<span class="text-[10px] uppercase font-black text-[#2dd4bf] animate-fade-in">ACCEPTED</span>`;
+                            } else {
+                                statusHtml = `<span class="text-[10px] uppercase font-black text-red-500 animate-fade-in">REFUSED</span>`;
+                            }
+
+                            // inlocuim butoanele cu textul
+                            actionDiv.innerHTML = statusHtml;
+                            actionDiv.className = "";
+                        }
+
+                        // scadem contorul de pe clopotel
+                        const badge = document.querySelector('#notif-container .bg-red-500');
+                        if(badge) {
+                            let count = parseInt(badge.innerText);
+                            if(count > 1) {
+                                badge.innerText = count - 1;
+                            } else {
+                                badge.remove(); // daca e 1 il stergem de tot
+                            }
+                        }
+
+                    } else {
+                        console.error(data.message);
+                    }
+                })
+                .catch(err => console.error(err));
+            }
+
+            // --- postari si comentarii ---
+            function showPreview(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview-img-tag').src = e.target.result;
+                        document.getElementById('post-media-preview').classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            function clearMedia() {
+                document.getElementById('media-upload').value = '';
+                document.getElementById('post-media-preview').classList.add('hidden');
+            }
+
+            function toggleSpark(postId) {
+                const btn = document.getElementById(`spark-btn-${postId}`);
+                const countSpan = document.getElementById(`spark-count-${postId}`);
+                const icon = btn.querySelector('.material-symbols-outlined');
+
+                btn.classList.add('scale-110');
+                setTimeout(() => btn.classList.remove('scale-110'), 200);
+
+                fetch(`/Posts/ToggleReaction?postId=${postId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.succes || data.success) {
+                        countSpan.innerText = data.count;
+                        if (data.isReacted) {
+                            btn.classList.remove('text-[#94a3b8]', 'hover:text-[#2dd4bf]');
+                            btn.classList.add('text-[#2dd4bf]');
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                        } else {
+                            btn.classList.add('text-[#94a3b8]', 'hover:text-[#2dd4bf]');
+                            btn.classList.remove('text-[#2dd4bf]');
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                        }
+                    }
+                });
+            }
+
+            function toggleCommentsSection(postId) {
+                const section = document.getElementById(`comments-section-${postId}`);
+                section.classList.toggle('hidden');
+                if (!section.classList.contains('hidden')) {
+                    setTimeout(() => { const input = document.getElementById(`comment-input-${postId}`); if(input) input.focus(); }, 100);
+                }
+            }
+
+            function handleEnter(e, postId) { if (e.key === 'Enter') postComment(postId); }
+
+                function postComment(postId) {
+                    const input = document.getElementById(`comment-input-${postId}`);
+                    // preluam textul si eliminam spatiile inutile
+                    const content = input.value.trim();
+
+                    // daca nu exista text, nu trimitem cererea la server
+                    if (!content) return;
+
+                    // cautam un div special pentru erori in interiorul postarii
+                    const errorDiv = document.getElementById(`comment-error-${postId}`);
+                    if (errorDiv) {
+                        errorDiv.classList.add('hidden');
+                        errorDiv.innerText = '';
+                    }
+
+                    // butonul de trimitere
+                    const btn = input.nextElementSibling;
+                    const originalIcon = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>';
+
+                    // pregatim datele pentru trimitere sub forma de multipart/form-data
+                    const formData = new FormData();
+                    formData.append('postId', postId);
+                    formData.append('content', content);
+
+                    // trimitem cererea catre metoda addcomment din postscontroller
+                    fetch('/Posts/AddComment', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        // dezactivam loader-ul si repunem iconita originala
+                        btn.disabled = false;
+                        btn.innerHTML = originalIcon;
+
+                        // verificam proprietatea success returnata de controller
+                        if (data.success || data.succes) {
+                            // daca succes, adaugam noul comentariu in lista vizibila
+                            const list = document.getElementById(`comments-list-${postId}`);
+                            const html = `
+                                <div class="flex gap-3 text-sm group animate-fade-in relative">
+                                    <div class="size-8 rounded-full bg-cover bg-center shrink-0 border border-[#2d3640]"
+                                        style="background-image: url('${data.userImage}');"></div>
+                                    <div class="flex flex-col bg-[#161b20] p-2.5 rounded-r-xl rounded-bl-xl border border-[#2d3640] w-full relative">
+                                        <div class="flex justify-between items-baseline">
+                                            <span class="text-white font-bold text-xs">${data.userName}</span>
+                                            <span class="text-[#94a3b8] text-[10px]">Just now</span>
+                                        </div>
+
+                                        <div id="comm-display-${data.id}">
+                                            <p class="text-gray-300 pr-12">${data.content}</p>
+                                        </div>
+
+                                        <div id="comm-edit-form-${data.id}" class="hidden mt-2">
+                                            <textarea id="comm-input-edit-${data.id}" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-lg p-2 text-sm text-white focus:outline-none focus:border-[#2dd4bf] resize-none">${data.content}</textarea>
+                                            <div class="flex gap-2 mt-2">
+                                                <button type="button" onclick="saveEdit(${data.id}, ${postId})" class="text-[10px] bg-[#2dd4bf] text-black px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Save</button>
+                                                <button type="button" onclick="toggleEdit(${data.id})" class="text-[10px] bg-gray-600 text-white px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Cancel</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="absolute right-2 bottom-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button type="button" onclick="toggleEdit(${data.id})" class="text-[#94a3b8] hover:text-[#2dd4bf] transition-colors border-0 bg-transparent p-0 cursor-pointer">
+                                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                                            </button>
+                                            <div class="relative inline-block" id="del-container-${data.id}">
+                                                <button type="button" onclick="showConfirm(${data.id})" class="text-[#94a3b8] hover:text-red-400 border-0 bg-transparent p-0 flex items-center">
+                                                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                                                </button>
+                                                <div id="confirm-${data.id}" class="hidden absolute right-0 bottom-full mb-2 bg-[#1c2228] border border-red-500/50 rounded-lg p-2 shadow-2xl z-50 flex items-center gap-2 animate-fade-in">
+                                                    <span class="text-[10px] text-white uppercase font-bold whitespace-nowrap">Sure?</span>
+                                                    <button type="button" onclick="deleteComment(${data.id}, ${postId})" class="bg-red-500 text-white p-1 rounded hover:bg-red-600 border-0 cursor-pointer">
+                                                        <span class="material-symbols-outlined text-[12px] block">check</span>
+                                                    </button>
+                                                    <button type="button" onclick="hideConfirm(${data.id})" class="bg-[#2d3640] text-white p-1 rounded hover:bg-[#3f4954] border-0 cursor-pointer">
+                                                        <span class="material-symbols-outlined text-[12px] block">close</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            list.insertAdjacentHTML('afterbegin', html);
+                            // curatam campul de input dupa succes
+                            input.value = '';
+
+                            // actualizam vizual numarul total de comentarii de pe buton
+                            const countBtn = document.getElementById(`comment-count-btn-${postId}`);
+                            if (countBtn) {
+                                let current = parseInt(countBtn.innerText.trim()) || 0;
+                                countBtn.innerText = current + 1;
+                            }
+                        } else {
+                            // aici gestionam eroarea de la ai daca limbajul este neadecvat
+                            if (errorDiv) {
+                                // daca exista un container de eroare, il populam cu mesajul de la server
+                                errorDiv.innerText = data.message;
+                                errorDiv.classList.remove('hidden');
+                                // adaugam un efect vizual pentru a atrage atentia utilizatorului
+                                errorDiv.classList.add('animate-bounce');
+                                setTimeout(() => errorDiv.classList.remove('animate-bounce'), 1000);
+                            } else {
+                                // fallback: daca nu avem element in html, folosim o alerta browser
+                                alert("Security block: " + data.message);
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        // gestionam erorile de retea sau de server
+                        btn.disabled = false;
+                        btn.innerHTML = originalIcon;
+                        console.error("Technical error:", err);
+                    });
+                }
+
+
+        </script>
+        <style>
+            @@keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #2d3640;
+                border-radius: 10px;
+            }
+        </style>
+}

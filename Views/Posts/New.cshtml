@@ -1,0 +1,44 @@
+﻿@model ProiectDotNet.Models.Post
+
+
+<h2 class="text-center mt-5">Adăugare postare</h2>
+
+<br />
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-6 offset-3">
+            @* enctype pentru a permite trimiterea de fisiere *@ 
+            <form method="post" asp-action="New" asp-controller="Posts" enctype="multipart/form-data">
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-group">
+                    <label asp-for="Text" class="form-label">Text Postare</label>
+                    <br />
+                    <textarea asp-for="Text" class="form-control"></textarea>
+
+                    <!-- Mesaj de validare pentru continut -->
+                    <span asp-validation-for="Text" class="text-danger"></span>
+
+                    <br /><br />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Media" class="form-label">Încarcă o imagine sau un video</label>
+                    <br />
+                    <input type="file" name="Media" class="form-control" />
+
+                    <!-- Mesaj de validare pentru media -->
+                    <span asp-validation-for="Media" class="text-danger"></span>
+
+                    <br /><br />
+                </div>
+
+                <br />
+                <button class="btn btn-success" type="submit">Adaugă postare</button>
+
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+﻿@model IEnumerable<ProiectDotNet.Models.GroupMember>
+@{
+    ViewData["Title"] = "Join Requests";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+<div class="w-full max-w-2xl mx-auto py-8 px-4">
+    <div class="flex items-center gap-4 mb-10 border-b border-[#2d3640] pb-8">
+        <a href="/Groups/Show/@ViewBag.GroupId" class="text-[#94a3b8] hover:text-[#2dd4bf] transition-colors">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <h1 class="text-3xl font-black text-white uppercase tracking-tighter">
+            Join Requests <span class="text-[#2dd4bf] text-sm block">@ViewBag.GroupName</span>
+        </h1>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="flex flex-col gap-4">
+            @foreach (var request in Model)
+            {
+                <div class="bg-[#1c2228] p-5 rounded-2xl border border-[#2d3640] flex items-center justify-between shadow-xl">
+                    <div class="flex items-center gap-4">
+                        <div class="size-12 rounded-full bg-[#2d3640] flex items-center justify-center border border-[#2dd4bf]/20 overflow-hidden">
+                            @if (!string.IsNullOrEmpty(request.User?.ProfilePicture))
+                            {
+                                <img src="@request.User.ProfilePicture" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                <span class="text-lg font-black text-[#2dd4bf]">@request.User?.FirstName?[0]</span>
+                            }
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-white font-black uppercase text-sm tracking-tight">@request.User?.FirstName @request.User?.LastName</span>
+                            <span class="text-[#94a3b8] text-[10px] font-medium uppercase tracking-widest">Wants to join your squad</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        @* buton acceptare cerere *@
+                        <form asp-controller="GroupMembers" asp-action="ProcessRequest" method="post">
+                            <input type="hidden" name="groupId" value="@request.GroupId" />
+                            <input type="hidden" name="userId" value="@request.UserId" />
+                            <input type="hidden" name="accept" value="true" />
+                            <button type="submit" class="p-3 bg-[#2dd4bf] text-[#102220] rounded-xl hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined text-sm">check</span>
+                            </button>
+                        </form>
+                        @* buton refuzare cerere *@
+                        <form asp-controller="GroupMembers" asp-action="ProcessRequest" method="post">
+                            <input type="hidden" name="groupId" value="@request.GroupId" />
+                            <input type="hidden" name="userId" value="@request.UserId" />
+                            <input type="hidden" name="accept" value="false" />
+                            <button type="submit" class="p-3 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500/5 transition-all">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-20 bg-[#1c2228] rounded-3xl border border-[#2d3640] opacity-50">
+            <span class="material-symbols-outlined text-5xl mb-4">mail_outline</span>
+            <p class="text-[#94a3b8] font-medium">No pending requests for this squad.</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,95 @@
+﻿@page
+@model LoginModel
+
+@{
+    // setam titlul si layout-ul principal al aplicatiei
+    ViewData["Title"] = "Log in";
+    Layout = "/Views/Shared/_LayoutTest.cshtml";
+}
+
+@* containerul principal care centreaza formularul pe ecran *@
+<div class="flex items-center justify-center min-h-full py-12">
+
+    @* cardul de login: acelasi stil dark ca la register *@
+    <div class="w-full max-w-md bg-[#121214] rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative">
+
+        @* linia de gradient de sus *@
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent-yellow"></div>
+
+        @* header-ul formularului *@
+        <div class="flex flex-col items-center pt-8 pb-6 px-8 text-center gap-4">
+            @* iconita bolt (fulger) pentru a sugera energie/reconectare *@
+            <span class="material-symbols-outlined text-6xl text-primary drop-shadow-[0_0_15px_rgba(19,236,218,0.5)]">bolt</span>
+
+            <h3 class="text-2xl font-bold text-white leading-tight uppercase">
+                Welcome Back<br />
+                <span class="text-lg font-medium text-gray-400 normal-case">Reconnect with your sparks</span>
+            </h3>
+        </div>
+
+        @* formularul propriu-zis *@
+        <form id="account" method="post" class="px-8 pb-8 flex flex-col gap-5">
+
+            @* afisare erori de validare *@
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-xs font-bold text-center" role="alert"></div>
+
+            @* grup camp: email *@
+            <label class="flex flex-col gap-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Email Address</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-sm">alternate_email</span>
+                    </div>
+                    <input asp-for="Input.Email" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium" placeholder="student@university.edu" autocomplete="username" />
+                </div>
+                <span asp-validation-for="Input.Email" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* grup camp: parola *@
+            <label class="flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Password</span>
+                    @* link catre forgot password - momentan dezactivat vizual dar functional *@
+                    @* <a id="forgot-password" asp-page="./ForgotPassword" class="text-[10px] font-bold text-primary hover:underline cursor-pointer">Forgot password?</a> *@
+                </div>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-primary">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                    </div>
+                    <input asp-for="Input.Password" type="password" class="w-full rounded-lg bg-black/40 border border-white/10 py-3 pl-11 pr-4 text-white placeholder-gray-600 focus:border-primary outline-none text-sm font-medium" placeholder="Enter your secure key" autocomplete="current-password" />
+                </div>
+                <span asp-validation-for="Input.Password" class="text-red-500 text-[10px]"></span>
+            </label>
+
+            @* checkbox remember me *@
+            <div class="flex items-center gap-3 mt-2">
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input asp-for="Input.RememberMe" type="checkbox" class="w-4 h-4 rounded bg-black/40 border-white/10 text-primary focus:ring-primary focus:ring-offset-0 transition-all group-hover:border-primary" />
+                    <span class="text-xs text-gray-400 group-hover:text-white transition-colors">Remember me on this device</span>
+                </label>
+            </div>
+
+            @* buton submit *@
+            <button id="login-submit" type="submit" class="group relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-r from-primary to-accent-yellow py-4 font-black uppercase tracking-widest text-[#102220] transition-all hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:scale-[1.02] mt-2">
+                <span class="flex items-center gap-2">
+                    Ignite Spark & Log In
+                    <span class="material-symbols-outlined text-lg font-black">login</span>
+                </span>
+            </button>
+
+            @* link catre register *@
+            <p class="text-center text-xs text-gray-500 mt-4">
+                Don't have a profile yet? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary font-bold hover:underline">Join meetMi</a>
+            </p>
+
+            @* link pentru re-trimitere confirmare email *@
+            @* <p class="text-center">
+                <a id="resend-confirmation" asp-page="./ResendEmailConfirmation" class="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">Resend email confirmation</a>
+            </p> *@
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

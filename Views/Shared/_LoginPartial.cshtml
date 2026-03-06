@@ -1,0 +1,43 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using ProiectDotNet.Models
+
+@* injectam managerii identity *@
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@* verificam daca userul este autentificat *@
+@if (SignInManager.IsSignedIn(User))
+{
+    @* preluam userul curent asincron *@
+    var user = await UserManager.GetUserAsync(User);
+    @* daca nu gasim prenumele, punem explorer *@
+    var firstName = user?.FirstName ?? "explorer";
+    var userId = user?.Id;
+
+    <div class="flex items-center gap-3">
+        @* link catre profil cu mesajul personalizat *@
+        <a asp-area="" asp-controller="Profiles" asp-action="Show" asp-route-id="@userId" class="text-xs font-bold text-gray-400 uppercase tracking-tighter hover:text-primary transition-colors" title="My Profile">
+            ready for new sparks, <span class="text-primary">@firstName</span>?
+        </a>
+
+        @* butonul de logout *@
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="text-sm font-bold uppercase text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/10 transition-all tracking-widest">
+                logout
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    @* daca nu e logat, aratam butoanele de register si login *@
+    <div class="flex items-center gap-4">
+        <a class="hidden md:block text-sm font-bold uppercase text-gray-400 hover:text-white transition-colors tracking-widest" asp-area="Identity" asp-page="/Account/Register">
+            register
+        </a>
+
+        <a class="text-sm font-bold uppercase text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/10 transition-all tracking-widest" asp-area="Identity" asp-page="/Account/Login">
+            login
+        </a>
+    </div>
+}

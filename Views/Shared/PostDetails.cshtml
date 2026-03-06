@@ -1,0 +1,337 @@
+﻿@* preluare id user curent *@
+@model ProiectDotNet.Models.Post
+@inject Microsoft.AspNetCore.Identity.UserManager<ProiectDotNet.Models.ApplicationUser> UserManager
+
+@{
+    var currentUserId = UserManager.GetUserId(User);
+    var hasSparked = Model.Reactions != null && Model.Reactions.Any(r => r.UserId == currentUserId);
+    var commentsCount = Model.Comments != null ? Model.Comments.Count : 0;
+    var sparkCount = Model.Reactions != null ? Model.Reactions.Count : 0;
+
+    var isAdmin = User.IsInRole("Admin");
+    var isOwner = currentUserId == Model.UserId;
+
+    // doar cel ce a facut o postare/comentariu o poate edita si sterge
+    // + adminul poate sterge
+    var canEdit = isOwner;
+    var canDelete = isOwner || isAdmin;
+}
+
+@* container principal postare *@
+<div class="bg-[#1c2228] rounded-xl p-5 shadow-sm border border-[#2d3640] hover:border-[#2dd4bf]/30 transition-colors mb-6 group break-inside-avoid" id="post-@Model.Id">
+    <div class="flex gap-4">
+        @* poza profil autor *@
+        <a href="/Profiles/Show/@Model.UserId" class="shrink-0">
+            <div class="size-10 rounded-full bg-cover bg-center border border-[#2d3640]"
+                 style="background-image: url('@(Model.User?.ProfilePicture ?? "/images/default-avatar.png")');"></div>
+        </a>
+
+
+        <div class="flex flex-col flex-1 gap-2">
+            @* header postare cu nume si meniu *@
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col">
+                    <a href="/Profiles/Show/@Model.UserId" class="text-white font-bold text-base hover:underline">
+
+                        @Model.User?.FirstName @Model.User?.LastName
+                    </a>
+                    <span class="text-[#94a3b8] text-xs">@Model.Date.ToString("MMM dd • HH:mm")</span>
+                </div>
+
+                @* meniu dropdown pentru editare si stergere *@
+                @if (canEdit || canDelete)
+                {
+                    <div class="relative group/menu">
+                        <button class="text-[#94a3b8] hover:text-white transition-colors p-1 rounded">
+                            <span class="material-symbols-outlined">more_horiz</span>
+                        </button>
+
+
+                        <div class="absolute right-0 mt-1 w-32 bg-[#161b20] border border-[#2d3640] rounded-lg shadow-xl z-50 py-1 hidden group-hover/menu:block hover:block">
+                            @if (canEdit)
+                            {
+                                <a href="/Posts/Edit/@Model.Id" class="block px-4 py-2 text-sm text-[#94a3b8] hover:bg-[#2d3640] hover:text-white flex items-center gap-2 text-decoration-none">
+                                    <span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                </a>
+                            }
+
+                            @if (canDelete)
+                            {
+                                <button type="button" onclick="showPostConfirm(@Model.Id)"
+                                class="block px-4 py-2 text-sm text-red-400 hover:bg-[#2d3640] w-full text-left flex items-center gap-2 border-0 bg-transparent cursor-pointer">
+
+                                    <span class="material-symbols-outlined text-[16px]">delete</span> Delete
+                                </button>
+                            }
+                        </div>
+
+                        @* interfata mica de confirmare stergere postare integrata in platforma *@
+                        <div id="post-confirm-@Model.Id" class="hidden absolute right-0 top-full mt-2 bg-[#1c2228] border border-red-500/50 rounded-lg p-2 shadow-2xl z-[60] flex items-center gap-2 animate-fade-in">
+                            <span class="text-[10px] text-white uppercase font-bold whitespace-nowrap">Delete Post?</span>
+                            <form asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                                <button type="submit" class="bg-red-500 text-white p-1 rounded hover:bg-red-600 border-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-[12px] block">check</span>
+                                </button>
+
+                            </form>
+                            <button type="button" onclick="hidePostConfirm(@Model.Id)" class="bg-[#2d3640] text-white p-1 rounded hover:bg-[#3f4954] border-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-[12px] block">close</span>
+
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* text postare - link catre pagina individuala *@
+            @if (!string.IsNullOrEmpty(Model.Text))
+
+            {
+                <a href="/Posts/Show/@Model.Id" class="text-decoration-none block">
+                    <p class="text-gray-300 leading-relaxed text-sm md:text-base mt-1 hover:text-white transition-colors">@Model.Text</p>
+                </a>
+            }
+
+            @* continut media *@
+
+            @if (!string.IsNullOrEmpty(Model.Media))
+            {
+                <div class="mt-2 rounded-lg overflow-hidden border border-[#2d3640] max-h-[500px] w-full bg-black/50 flex items-center justify-center">
+                    @if (Model.Media.EndsWith(".mp4") ||
+                                    Model.Media.EndsWith(".mov"))
+                    {
+                        <video controls class="max-w-full max-h-[500px]"><source src="@Model.Media" type="video/mp4"></video>
+                    }
+                    else
+
+                    {
+                        <img src="@Model.Media" class="max-w-full max-h-[500px] object-contain" />
+                    }
+                </div>
+            }
+
+            @if (User.Identity.IsAuthenticated)
+
+            {
+
+                @* butoane actiuni *@
+                <div class="flex items-center justify-between mt-2 pt-3 border-t border-[#2d3640]">
+                    <div class="flex gap-6">
+                        <button onclick="toggleSpark(@Model.Id)" id="spark-btn-@Model.Id"
+                                class="flex items-center gap-2 transition-colors border-0 bg-transparent p-0 @(hasSparked ? "text-[#2dd4bf]" : "text-[#94a3b8] hover:text-[#2dd4bf]")">
+                            <span class="material-symbols-outlined text-[20px]" style="@(hasSparked ?
+                                                                                "font-variation-settings: 'FILL' 1;" : "")">bolt</span>
+                        <span class="text-sm font-medium" id="spark-count-@Model.Id">@sparkCount</span>
+                    </button>
+
+                        <button onclick="toggleCommentsSection(@Model.Id)" class="flex items-center gap-2 text-[#94a3b8] hover:text-white transition-colors border-0 bg-transparent p-0">
+
+                            <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                            <span class="text-sm font-medium" id="comment-count-btn-@Model.Id">@commentsCount</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                @* sectiune comentarii *@
+                <div id="comments-section-@Model.Id" class="hidden mt-3 pt-3 border-t border-[#2d3640]/50">
+                    <div id="comments-list-@Model.Id" class="flex flex-col gap-3 mb-4">
+                    @if (Model.Comments != null)
+                    {
+                        foreach (var comm in Model.Comments.OrderBy(c => c.Date))
+                        {
+                            <div class="flex gap-3 text-sm group relative" id="comm-container-@comm.Id">
+                                @* poza de profil *@
+                                <div class="size-8 rounded-full bg-cover bg-center shrink-0 border border-[#2d3640]"
+                                    style="background-image: url('@(comm.User?.ProfilePicture ?? "/images/default-avatar.png")');"></div>
+                                
+                                <div class="flex flex-col bg-[#161b20] p-2.5 rounded-r-xl rounded-bl-xl border border-[#2d3640] w-full relative">
+                                    @* header comentariu: nume + ora - am adaugat pr-12 pentru a evita suprapunerea cu butoanele *@
+                                    <div class="flex justify-between items-baseline pr-12">
+                                        <span class="text-white font-bold text-xs">@comm.User?.FirstName</span>
+                                        <span class="text-[#94a3b8] text-[10px]">@comm.Date.ToString("HH:mm")</span>
+                                    </div>
+
+                                    @* zona de afisare text *@
+                                    <div id="comm-display-@comm.Id">
+                                        <p class="text-gray-300 text-xs mt-1">@comm.Content</p>
+                                    </div>
+
+                                    @* zona de editare inline (ascunsa initial) *@
+                                    <div id="comm-edit-form-@comm.Id" class="hidden mt-2">
+                                        <textarea id="comm-input-edit-@comm.Id" class="w-full bg-[#1c2228] border border-[#2d3640] rounded-lg p-2 text-xs text-white focus:outline-none focus:border-[#2dd4bf] resize-none">@comm.Content</textarea>
+                                        <div class="flex gap-2 mt-2">
+                                            <button type="button" onclick="saveEdit(@comm.Id, @Model.Id)" class="text-[10px] bg-[#2dd4bf] text-black px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Save</button>
+                                            <button type="button" onclick="toggleEdit(@comm.Id)" class="text-[10px] bg-gray-600 text-white px-2 py-1 rounded font-bold uppercase border-0 cursor-pointer">Cancel</button>
+                                        </div>
+                                    </div>
+
+                                    @* butoane de actiuni*@
+                                    <div class="absolute right-2 top-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        @if (comm.UserId == currentUserId)
+                                        {
+                                            @* butonul de edit care acum activeaza interfata inline *@
+                                            <button type="button" onclick="toggleEdit(@comm.Id)" class="text-[#94a3b8] hover:text-[#2dd4bf] bg-transparent border-0 p-0 cursor-pointer">
+                                                <span class="material-symbols-outlined text-[14px]">edit</span>
+                                            </button>
+                                        }
+                                        
+                                        @if (comm.UserId == currentUserId || isAdmin)
+                                        {
+                                            <div class="relative inline-block" id="del-container-@comm.Id">
+                                                <button type="button" onclick="showConfirm(@comm.Id)" class="text-[#94a3b8] hover:text-red-400 border-0 bg-transparent p-0 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                </button>
+
+                                                @* confirmarea de stergere *@
+                                                <div id="confirm-@comm.Id" class="hidden absolute right-0 bottom-full mb-2 bg-[#1c2228] border border-red-500/50 rounded-lg p-2 shadow-2xl z-50 flex items-center gap-2 animate-fade-in">
+                                                    <span class="text-[10px] text-white uppercase font-bold whitespace-nowrap">Sure?</span>
+                                                    <button type="button" onclick="deleteComment(@comm.Id, @Model.Id)" class="bg-red-500 text-white p-1 rounded hover:bg-red-600 border-0 cursor-pointer">
+                                                        <span class="material-symbols-outlined text-[12px] block">check</span>
+                                                    </button>
+                                                    <button type="button" onclick="hideConfirm(@comm.Id)" class="bg-[#2d3640] text-white p-1 rounded hover:bg-[#3f4954] border-0 cursor-pointer">
+                                                        <span class="material-symbols-outlined text-[12px] block">close</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    </div>
+
+                    @* zona pentru afisarea erorilor de la filtrul ai *@
+                    <div id="comment-error-@Model.Id" class="hidden text-red-400 text-[10px] font-bold uppercase mb-2 animate-pulse bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                        <span class="error-message"></span>
+                    </div>
+
+                    @* input rapid pentru comentariu *@
+                    <div class="flex gap-3 items-center">
+                        <input type="text" id="comment-input-@Model.Id" placeholder="add a comment..."
+                               class="flex-1 bg-[#161b20] border border-[#2d3640] rounded-full py-1.5 px-4 text-xs text-white focus:border-[#2dd4bf] outline-none"
+                               onkeypress="if(event.key==='Enter') postComment(@Model.Id)">
+                        <button onclick="postComment(@Model.Id)" class="p-1.5 bg-[#2dd4bf] text-slate-900 rounded-full border-0">
+                            <span class="material-symbols-outlined text-[16px] block">send</span>
+                        </button>
+                    </div>
+                </div>
+       
+            }
+        </div>
+    </div>
+</div>
+
+
+<script>
+        function showPostConfirm(id) {
+            document.getElementById(`post-confirm-${id}`).classList.remove('hidden');
+    }
+        function hidePostConfirm(id) {
+            document.getElementById(`post-confirm-${id}`).classList.add('hidden');
+        }
+
+        @* functie pentru comutarea vizibilitatii formularului de editare *@
+        function toggleEdit(id) {
+            const display = document.getElementById(`comm-display-${id}`);
+            const editForm = document.getElementById(`comm-edit-form-${id}`);
+            if (display && editForm) {
+                display.classList.toggle('hidden');
+                editForm.classList.toggle('hidden');
+            }
+        }
+
+        @* functie pentru salvarea modificarilor prin ajax *@
+        function saveEdit(id, postId) {
+            const input = document.getElementById(`comm-input-edit-${id}`);
+            const content = input.value.trim();
+            @* cautam div-ul de eroare specific postarii *@
+            const errorDiv = document.getElementById(`comment-error-${postId}`);
+
+            if (!content) return;
+
+            const formData = new FormData();
+            formData.append('Content', content);
+
+            fetch(`/Comments/Edit/${id}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    @* daca e succes, actualizam textul si ascundem eventualele erori anterioare *@
+                    document.getElementById(`comm-display-${id}`).querySelector('p').innerText = data.content;
+                    if (errorDiv) errorDiv.classList.add('hidden');
+                    toggleEdit(id);
+                } else {
+                    @* afisarea erorii in mod integrat in platforma *@
+                    if (errorDiv) {
+                        const errorSpan = errorDiv.querySelector('.error-message');
+                        if (errorSpan) errorSpan.innerText = data.message;
+                        else errorDiv.innerText = data.message;
+
+                        errorDiv.classList.remove('hidden');
+                        errorDiv.classList.add('animate-bounce');
+                        setTimeout(() => errorDiv.classList.remove('animate-bounce'), 1000);
+                    } else {
+                        @* fallback in caz ca div-ul de eroare nu este gasit *@
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(err => console.error("Technical error saving comment:", err));
+        }
+
+
+        @* functie pentru stergerea unui comentariu *@
+        function deleteComment(commId, postId) {
+            fetch(`/Comments/Delete/${commId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // stergem comentariul din lista vizual
+                    // gasim comentariul si il stergem
+                    let commElem = document.getElementById(`comm-container-${commId}`);
+                    
+                    // daca nu il gasim pe cel de sus
+                    if (!commElem) {
+                        // cautam orice div cu acest container de confirmare
+                        const confirmDiv = document.getElementById(`confirm-${commId}`);
+                        if (confirmDiv) commElem = confirmDiv.closest('.flex.gap-3.text-sm');
+                    }
+
+                    if (commElem) {
+                        commElem.classList.add('opacity-0', 'scale-95'); // efect vizual la stergere
+                        setTimeout(() => commElem.remove(), 300);
+                    }
+
+                    // actualizam numarul de comentarii de pe buton
+                    const countBtn = document.getElementById(`comment-count-btn-${postId}`);
+                    if (countBtn) {
+                        let current = parseInt(countBtn.innerText.trim()) || 0;
+                        if (current > 0) countBtn.innerText = current - 1;
+                    }
+                } else {
+                    alert("Error when deleting " + (data.message || "Unknown"));
+                }
+            })
+            .catch(err => console.error("Technical error:", err));
+        }
+
+        // confirmari
+        function showConfirm(id) { 
+            const el = document.getElementById(`confirm-${id}`);
+            if(el) el.classList.remove('hidden'); 
+        }
+        function hideConfirm(id) { 
+            const el = document.getElementById(`confirm-${id}`);
+            if(el) el.classList.add('hidden'); 
+        }
+</script>
