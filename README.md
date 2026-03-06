@@ -1,5 +1,7 @@
 # meetMi - Micro-Social Platform
 
+<img width="950" height="385" alt="Screenshot 2026-03-06 202414" src="https://github.com/user-attachments/assets/60ecc61f-56cb-4652-929c-0c8d3fad8a76" />
+
 ## Project Overview
 **meetMi** is a full-stack web application developed in **ASP.NET Core MVC**, designed to facilitate social interaction through personalized profiles, group management, and AI-driven content moderation.
 
